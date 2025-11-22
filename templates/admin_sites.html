@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Site Management</h2>
+            <span class="badge bg-primary">{{ sites|length }} sites</span>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Monitoring Sites</h5>
+                <p class="text-muted mb-0">Manage water level monitoring locations</p>
+            </div>
+            <div class="card-body">
+                {% if sites %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Site Name</th>
+                                <th>Location</th>
+                                <th>Coordinates</th>
+                                <th>QR Code</th>
+                                <th>River Basin</th>
+                                <th>Status</th>
+                                <th>Submissions</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for site in sites %}
+                            <tr>
+                                <td>
+                                    <strong>{{ site.name }}</strong>
+                                    {% if site.description %}
+                                    <br><small class="text-muted">{{ site.description|truncate(30) }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if site.district and site.state %}
+                                    {{ site.district }}, {{ site.state }}
+                                    {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ "%.4f"|format(site.latitude) }},<br>{{ "%.4f"|format(site.longitude) }}</small>
+                                </td>
+                                <td>
+                                    <code>{{ site.qr_code }}</code>
+                                </td>
+                                <td>
+                                    {{ site.river_basin or 'Not specified' }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if site.is_active else 'secondary' }}">
+                                        {{ 'Active' if site.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ site.submissions|length }}</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('capture', site_id=site.id) }}" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="Capture Reading">
+                                            <i class="bi bi-camera"></i>
+                                        </a>
+                                        <button class="btn btn-outline-info" data-bs-toggle="tooltip" title="Assign Users">
+                                            <i class="bi bi-person-plus"></i>
+                                        </button>
+                                        <button class="btn btn-outline-warning" data-bs-toggle="tooltip" title="Edit Site">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-geo-alt display-1 text-muted"></i>
+                    <h4 class="text-muted mt-3">No Sites Found</h4>
+                    <p class="text-muted">No monitoring sites are currently configured.</p>
+                    <button class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add First Site
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- User Assignment Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Site Assignments</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Select User</label>
+                            <select class="form-select" id="user-select">
+                                <option value="">Choose a user...</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.username }} ({{ user.role|replace('_', ' ')|title }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Select Site</label>
+                            <select class="form-select" id="site-select">
+                                <option value="">Choose a site...</option>
+                                {% for site in sites %}
+                                <option value="{{ site.id }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-primary" id="assign-site-btn">
+                        <i class="bi bi-link"></i> Assign Site to User
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize tooltips
+const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+
+// Site assignment functionality
+document.getElementById('assign-site-btn').addEventListener('click', async function() {
+    const userId = document.getElementById('user-select').value;
+    const siteId = document.getElementById('site-select').value;
+    
+    if (!userId || !siteId) {
+        showAlert('Please select both a user and a site.', 'warning');
+        return;
+    }
+    
+    const btn = this;
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Assigning...';
+    
+    try {
+        const response = await fetch('/api/admin/assign-site', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                site_id: siteId
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('Site assigned successfully!', 'success');
+            // Clear selections
+            document.getElementById('user-select').value = '';
+            document.getElementById('site-select').value = '';
+        } else {
+            showAlert('Error: ' + result.error, 'danger');
+        }
+        
+    } catch (error) {
+        showAlert('Assignment failed: ' + error.message, 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+});
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.querySelector('.container.mt-4').insertBefore(alertDiv, document.querySelector('.container.mt-4').firstChild);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

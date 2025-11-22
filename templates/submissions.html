@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2>My Submissions</h2>
+        
+        {% if submissions %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Site</th>
+                            <th>Water Level (m)</th>
+                            <th>Location</th>
+                            <th>Sync Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for submission in submissions %}
+                        <tr>
+                            <td>{{ submission.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ submission.site.name }}</td>
+                            <td><strong>{{ submission.water_level }}</strong></td>
+                            <td>
+                                <small>
+                                    {{ "%.4f"|format(submission.gps_latitude) }},<br>
+                                    {{ "%.4f"|format(submission.gps_longitude) }}
+                                </small>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if submission.sync_status == 'synced' else 'warning' }}">
+                                    {{ submission.sync_status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                No submissions found. <a href="{{ url_for('dashboard') }}">Capture your first reading</a>.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

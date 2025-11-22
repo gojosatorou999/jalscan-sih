@@ -1,0 +1,572 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Public Submissions Review</h2>
+            <div>
+                <span class="badge bg-primary">{{ submissions|length }} total</span>
+                <span class="badge bg-warning">{{ submissions|selectattr('status', 'equalto', 'pending')|list|length }} pending</span>
+                <span class="badge bg-success">{{ submissions|selectattr('status', 'equalto', 'approved')|list|length }} approved</span>
+                <span class="badge bg-danger">{{ submissions|selectattr('status', 'equalto', 'rejected')|list|length }} rejected</span>
+            </div>
+        </div>
+
+        {% if submissions %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Public Image Submissions</h5>
+                <p class="text-muted mb-0">Review and manage submissions from the public with identity verification</p>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Site</th>
+                                <th>ID Verification</th>
+                                <th>Water Level Photo</th>
+                                <th>Submitted</th>
+                                <th>Location</th>
+                                <th>Contact</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in submissions %}
+                            <tr>
+                                <td>
+                                    <strong>#{{ submission.id }}</strong>
+                                    {% if submission.id_type %}
+                                    <br>
+                                    <small class="badge bg-info">{{ submission.id_type|replace('_', ' ')|title }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <!-- FIXED: Use public_submission_site instead of site_rel -->
+                                    <strong>{{ submission.public_submission_site.name if submission.public_submission_site else 'Unknown Site' }}</strong>
+                                    {% if submission.description %}
+                                    <br>
+                                    <small class="text-muted">{{ submission.description|truncate(50) }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <!-- ID Verification Section -->
+                                    <div class="btn-group-vertical btn-group-sm">
+                                        {% if submission.id_front_filename %}
+                                        <button class="btn btn-outline-primary view-id-btn" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#idModal"
+                                                data-front="{{ submission.id_front_filename }}"
+                                                data-back="{{ submission.id_back_filename }}"
+                                                data-live="{{ submission.live_photo_filename }}"
+                                                data-id-type="{{ submission.id_type }}"
+                                                data-submission-id="{{ submission.id }}">
+                                            <i class="bi bi-person-badge"></i> View ID
+                                        </button>
+                                        {% endif %}
+                                        
+                                        {% if submission.live_photo_filename %}
+                                        <button class="btn btn-outline-success view-live-btn mt-1"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#livePhotoModal"
+                                                data-filename="{{ submission.live_photo_filename }}"
+                                                data-submission-id="{{ submission.id }}">
+                                            <i class="bi bi-camera"></i> Live Photo
+                                        </button>
+                                        {% endif %}
+                                        
+                                        {% if not submission.id_front_filename and not submission.live_photo_filename %}
+                                        <span class="text-muted small">No ID Proof</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('public_uploaded_file', filename=submission.photo_filename) }}" 
+                                       target="_blank" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                                <td>
+                                    <small>{{ submission.timestamp.strftime('%Y-%m-%d %H:%M') if submission.timestamp else 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    {% if submission.gps_latitude %}
+                                    <small>
+                                        {{ "%.4f"|format(submission.gps_latitude) }},<br>
+                                        {{ "%.4f"|format(submission.gps_longitude) }}
+                                    </small>
+                                    {% else %}
+                                    <span class="text-muted">No GPS</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if submission.contact_email %}
+                                    <small>{{ submission.contact_email }}</small>
+                                    {% else %}
+                                    <span class="text-muted">None</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'warning' if submission.status == 'pending' else 'success' if submission.status == 'approved' else 'danger' }}">
+                                        {{ submission.status }}
+                                    </span>
+                                    {% if submission.reviewed_by %}
+                                    <br>
+                                    <small class="text-muted">
+                                        <!-- FIXED: Use public_submission_reviewer instead of reviewer_rel -->
+                                        by {{ submission.public_submission_reviewer.username if submission.public_submission_reviewer else 'Unknown' }}
+                                    </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if submission.status == 'pending' %}
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-success approve-btn" data-id="{{ submission.id }}" data-bs-toggle="tooltip" title="Approve Submission">
+                                            <i class="bi bi-check"></i> Approve
+                                        </button>
+                                        <button class="btn btn-danger reject-btn" data-id="{{ submission.id }}" data-bs-toggle="tooltip" title="Reject Submission">
+                                            <i class="bi bi-x"></i> Reject
+                                        </button>
+                                    </div>
+                                    {% else %}
+                                    <small class="text-muted">
+                                        Reviewed: {{ submission.reviewed_at.strftime('%Y-%m-%d') if submission.reviewed_at else 'N/A' }}
+                                        {% if submission.review_notes %}
+                                        <br>
+                                        <button class="btn btn-sm btn-outline-info mt-1" data-bs-toggle="popover" data-bs-title="Review Notes" data-bs-content="{{ submission.review_notes }}">
+                                            <i class="bi bi-chat-text"></i> Notes
+                                        </button>
+                                        {% endif %}
+                                    </small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <h4 class="text-muted mt-3">No Public Submissions</h4>
+                <p class="text-muted">No public image submissions have been made yet.</p>
+                <a href="{{ url_for('public_upload') }}" class="btn btn-primary">
+                    <i class="bi bi-eye"></i> View Public Upload Page
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ID Verification Modal -->
+<div class="modal fade" id="idModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">ID Verification - Submission <span id="idModalSubmissionId"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Front Side</h6>
+                        <div id="idFrontContainer">
+                            <img id="idFrontImage" class="img-fluid rounded border" style="max-height: 300px;">
+                        </div>
+                        <div class="mt-2 text-center">
+                            <a id="downloadFrontBtn" class="btn btn-sm btn-outline-primary" download>
+                                <i class="bi bi-download"></i> Download Front
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Back Side</h6>
+                        <div id="idBackContainer">
+                            <img id="idBackImage" class="img-fluid rounded border" style="max-height: 300px; display: none;">
+                            <div id="noBackImage" class="text-center text-muted py-5">
+                                <i class="bi bi-x-circle display-4"></i>
+                                <p class="mt-2">No back side uploaded</p>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <a id="downloadBackBtn" class="btn btn-sm btn-outline-primary" download style="display: none;">
+                                <i class="bi bi-download"></i> Download Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>ID Information</h6>
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td><strong>ID Type:</strong></td>
+                                        <td id="idTypeDisplay"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Verification Status:</strong></td>
+                                        <td>
+                                            <span class="badge bg-success" id="verificationStatus">Verified with Live Photo</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="viewLiveFromId">
+                    <i class="bi bi-camera"></i> View Live Photo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Live Photo Modal -->
+<div class="modal fade" id="livePhotoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Live Photo Verification - Submission <span id="liveModalSubmissionId"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <img id="livePhotoImage" class="img-fluid rounded border" style="max-height: 500px;">
+                </div>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    This photo was taken live during submission to verify the identity of the person submitting.
+                </div>
+                <div class="text-center">
+                    <a id="downloadLiveBtn" class="btn btn-outline-success" download>
+                        <i class="bi bi-download"></i> Download Live Photo
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="viewIdFromLive">
+                    <i class="bi bi-person-badge"></i> View ID Documents
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalTitle">Review Submission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="reviewNotes" class="form-label">Review Notes (Optional)</label>
+                    <textarea class="form-control" id="reviewNotes" rows="3" 
+                              placeholder="Add any notes about this submission..."></textarea>
+                    <div class="form-text">These notes will be saved with the review decision.</div>
+                </div>
+                
+                <!-- Verification Check -->
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="verificationConfirmed">
+                    <label class="form-check-label" for="verificationConfirmed">
+                        <strong>Identity Verified</strong>
+                        <small class="text-muted d-block">I have verified the government ID and live photo match</small>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmApprove" disabled>
+                    <i class="bi bi-check"></i> Approve
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmReject">
+                    <i class="bi bi-x"></i> Reject
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentSubmissionId = null;
+let currentIdFront = null;
+let currentIdBack = null;
+let currentLivePhoto = null;
+let currentIdType = null;
+
+const reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+const idModal = new bootstrap.Modal(document.getElementById('idModal'));
+const livePhotoModal = new bootstrap.Modal(document.getElementById('livePhotoModal'));
+
+// Initialize tooltips
+const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+
+// Initialize popovers
+const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+const popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+    return new bootstrap.Popover(popoverTriggerEl);
+});
+
+// ID View Button Handler
+document.querySelectorAll('.view-id-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const frontFilename = this.getAttribute('data-front');
+        const backFilename = this.getAttribute('data-back');
+        const liveFilename = this.getAttribute('data-live');
+        const idType = this.getAttribute('data-id-type');
+        const submissionId = this.getAttribute('data-submission-id');
+        
+        currentIdFront = frontFilename;
+        currentIdBack = backFilename;
+        currentLivePhoto = liveFilename;
+        currentIdType = idType;
+        
+        // Set front ID image
+        if (frontFilename) {
+            document.getElementById('idFrontImage').src = `/public/uploads/${frontFilename}`;
+            document.getElementById('downloadFrontBtn').href = `/public/uploads/${frontFilename}`;
+            document.getElementById('downloadFrontBtn').download = `front_id_${submissionId}.jpg`;
+        }
+        
+        // Set back ID image if available
+        if (backFilename) {
+            document.getElementById('idBackImage').src = `/public/uploads/${backFilename}`;
+            document.getElementById('idBackImage').style.display = 'block';
+            document.getElementById('noBackImage').style.display = 'none';
+            document.getElementById('downloadBackBtn').href = `/public/uploads/${backFilename}`;
+            document.getElementById('downloadBackBtn').download = `back_id_${submissionId}.jpg`;
+            document.getElementById('downloadBackBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('idBackImage').style.display = 'none';
+            document.getElementById('noBackImage').style.display = 'block';
+            document.getElementById('downloadBackBtn').style.display = 'none';
+        }
+        
+        // Set ID type
+        document.getElementById('idTypeDisplay').textContent = idType ? idType.replace('_', ' ').toUpperCase() : 'Not specified';
+        document.getElementById('idModalSubmissionId').textContent = `#${submissionId}`;
+        
+        idModal.show();
+    });
+});
+
+// Live Photo View Button Handler
+document.querySelectorAll('.view-live-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const filename = this.getAttribute('data-filename');
+        const submissionId = this.getAttribute('data-submission-id');
+        
+        if (filename) {
+            document.getElementById('livePhotoImage').src = `/public/uploads/${filename}`;
+            document.getElementById('downloadLiveBtn').href = `/public/uploads/${filename}`;
+            document.getElementById('downloadLiveBtn').download = `live_photo_${submissionId}.jpg`;
+            document.getElementById('liveModalSubmissionId').textContent = `#${submissionId}`;
+        }
+        
+        livePhotoModal.show();
+    });
+});
+
+// Navigation between modals
+document.getElementById('viewLiveFromId').addEventListener('click', function() {
+    idModal.hide();
+    setTimeout(() => {
+        if (currentLivePhoto) {
+            document.getElementById('livePhotoImage').src = `/public/uploads/${currentLivePhoto}`;
+            document.getElementById('downloadLiveBtn').href = `/public/uploads/${currentLivePhoto}`;
+            document.getElementById('downloadLiveBtn').download = `live_photo_${currentSubmissionId}.jpg`;
+            document.getElementById('liveModalSubmissionId').textContent = `#${currentSubmissionId}`;
+        }
+        livePhotoModal.show();
+    }, 500);
+});
+
+document.getElementById('viewIdFromLive').addEventListener('click', function() {
+    livePhotoModal.hide();
+    setTimeout(() => {
+        idModal.show();
+    }, 500);
+});
+
+// Review buttons
+document.querySelectorAll('.approve-btn, .reject-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        currentSubmissionId = this.getAttribute('data-id');
+        const isApprove = this.classList.contains('approve-btn');
+        
+        document.getElementById('confirmApprove').style.display = isApprove ? 'inline-block' : 'none';
+        document.getElementById('confirmReject').style.display = !isApprove ? 'inline-block' : 'none';
+        document.getElementById('reviewModalTitle').textContent = 
+            isApprove ? 'Approve Submission' : 'Reject Submission';
+            
+        // Clear previous inputs
+        document.getElementById('reviewNotes').value = '';
+        document.getElementById('verificationConfirmed').checked = false;
+        document.getElementById('confirmApprove').disabled = true;
+            
+        reviewModal.show();
+    });
+});
+
+// Enable approve button only when verification is confirmed
+document.getElementById('verificationConfirmed').addEventListener('change', function() {
+    document.getElementById('confirmApprove').disabled = !this.checked;
+});
+
+document.getElementById('confirmApprove').addEventListener('click', function() {
+    reviewSubmission('approve');
+});
+
+document.getElementById('confirmReject').addEventListener('click', function() {
+    reviewSubmission('reject');
+});
+
+async function reviewSubmission(action) {
+    const notes = document.getElementById('reviewNotes').value;
+    const verificationConfirmed = document.getElementById('verificationConfirmed').checked;
+    const submitBtn = action === 'approve' ? document.getElementById('confirmApprove') : document.getElementById('confirmReject');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Processing...';
+
+    try {
+        const response = await fetch(`/api/public/submissions/${currentSubmissionId}/review`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: action,
+                notes: notes,
+                verification_confirmed: verificationConfirmed
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showGlobalAlert(`Submission ${action}d successfully!`, 'success');
+            // Reload page after a short delay to show the alert
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            showGlobalAlert('Error: ' + result.error, 'danger');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+
+    } catch (error) {
+        showGlobalAlert('Review failed: ' + error.message, 'danger');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    } finally {
+        reviewModal.hide();
+    }
+}
+
+// Auto-refresh the page every 30 seconds to check for new submissions
+setTimeout(() => {
+    location.reload();
+}, 30000);
+</script>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Image preview styles */
+.img-preview {
+    max-height: 200px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.img-preview:hover {
+    transform: scale(1.05);
+    border-color: #007bff;
+}
+
+/* Verification status */
+.verification-badge {
+    font-size: 0.7em;
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .btn-group-sm > .btn {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.7rem;
+    }
+    
+    .badge {
+        font-size: 0.7em;
+    }
+    
+    .btn-group-vertical {
+        width: 100%;
+    }
+}
+
+/* Modal image styling */
+.modal-img-container {
+    text-align: center;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.modal-img-container img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}

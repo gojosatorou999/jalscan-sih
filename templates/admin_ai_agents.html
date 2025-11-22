@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card ai-feature-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-robot text-purple"></i> AI Agent Auto-Processor
+                </h4>
+                <span class="badge bg-success" id="autoStatus">Auto-Processing: OFF</span>
+            </div>
+            <div class="card-body">
+                <!-- Automatic CSV Setup -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-link-45deg"></i> Automatic CSV Processing Setup
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="autoSetupForm">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="mb-3">
+                                                <label for="csvUrl" class="form-label">CSV File URL</label>
+                                                <input type="url" class="form-control" id="csvUrl" 
+                                                       placeholder="https://your-csv-link.com/data.csv" required>
+                                                <div class="form-text">
+                                                    Enter the direct URL to your AI agent CSV file
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="checkInterval" class="form-label">Check Interval (seconds)</label>
+                                                <input type="number" class="form-control" id="checkInterval" 
+                                                       value="300" min="60" max="3600">
+                                                <div class="form-text">
+                                                    How often to check for new data
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-info">
+                                        <h6><i class="bi bi-info-circle"></i> Expected CSV Format:</h6>
+                                        <small>
+                                            <code>Date,Time,Role,River,ID,Water Level,Verified</code><br>
+                                            Example: <code>2025-10-07,02:19:09,Officer,Ganga,002,1-2 meters,Yes</code>
+                                        </small>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-ai">
+                                            <i class="bi bi-play-circle"></i> Start Auto-Processing
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" onclick="fetchNow()">
+                                            <i class="bi bi-cloud-download"></i> Fetch Now
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="stopAutoProcessing()">
+                                            <i class="bi bi-stop-circle"></i> Stop
+                                        </button>
+                                    </div>
+                                </form>
+                                <div id="setupResult" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Dashboard -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-speedometer2"></i> Processing Status
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="statusDashboard">
+                                    <div class="text-center py-3">
+                                        <p class="text-muted">Configure automatic processing to see status</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-clock-history"></i> Last Processed
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="lastProcessed">
+                                    <p class="text-muted">No data processed yet</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">Recent AI Submissions</h5>
+                                <span class="badge bg-primary">{{ ai_submissions|length }} total</span>
+                            </div>
+                            <div class="card-body">
+                                {% if ai_submissions %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Timestamp</th>
+                                                <th>River</th>
+                                                <th>Agent ID</th>
+                                                <th>Water Level</th>
+                                                <th>Role</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for submission in ai_submissions %}
+                                            <tr>
+                                                <td>{{ submission.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                <td>{{ submission.site.name }}</td>
+                                                <td>{{ submission.user.agent_id }}</td>
+                                                <td><strong>{{ submission.water_level }}m</strong></td>
+                                                <td><span class="badge bg-secondary">{{ submission.user.role }}</span></td>
+                                                <td>
+                                                    <span class="badge bg-{{ 'success' if submission.sync_status == 'synced' else 'warning' }}">
+                                                        {{ submission.sync_status }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <p class="text-muted text-center">No AI submissions processed yet</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let autoRefreshInterval = null;
+
+// Setup automatic processing
+document.getElementById('autoSetupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const csvUrl = document.getElementById('csvUrl').value;
+    const interval = document.getElementById('checkInterval').value;
+    const resultDiv = document.getElementById('setupResult');
+    
+    try {
+        const response = await fetch('/api/ai-agents/setup-automatic', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                csv_url: csvUrl,
+                interval: parseInt(interval)
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> 
+                    ${result.message}
+                </div>
+            `;
+            
+            document.getElementById('autoStatus').textContent = 'Auto-Processing: ON';
+            document.getElementById('autoStatus').className = 'badge bg-success';
+            
+            // Start status updates
+            startStatusUpdates();
+            
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    ${result.error}
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> 
+                Setup failed: ${error.message}
+            </div>
+        `;
+    }
+});
+
+// Manual fetch
+async function fetchNow() {
+    const resultDiv = document.getElementById('setupResult');
+    
+    try {
+        const response = await fetch('/api/ai-agents/fetch-process', {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> 
+                    ${result.message}
+                    ${result.latest_timestamp ? `<br><small>Latest: ${result.latest_timestamp}</small>` : ''}
+                </div>
+            `;
+            
+            // Refresh the page to show new submissions
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+            
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    ${result.error}
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> 
+                Fetch failed: ${error.message}
+            </div>
+        `;
+    }
+}
+
+// Stop auto-processing
+function stopAutoProcessing() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+    
+    document.getElementById('autoStatus').textContent = 'Auto-Processing: OFF';
+    document.getElementById('autoStatus').className = 'badge bg-danger';
+    
+    document.getElementById('setupResult').innerHTML = `
+        <div class="alert alert-warning">
+            <i class="bi bi-info-circle"></i> 
+            Auto-processing stopped
+        </div>
+    `;
+}
+
+// Start status updates
+function startStatusUpdates() {
+    updateStatus();
+    autoRefreshInterval = setInterval(updateStatus, 30000); // Update every 30 seconds
+}
+
+// Update status dashboard
+async function updateStatus() {
+    try {
+        // You can add status endpoint or use existing data
+        const statusDiv = document.getElementById('statusDashboard');
+        const now = new Date().toLocaleTimeString();
+        
+        statusDiv.innerHTML = `
+            <div class="text-center">
+                <i class="bi bi-check-circle text-success display-6"></i>
+                <h5>Auto-Processing Active</h5>
+                <p class="text-muted">Last checked: ${now}</p>
+                <div class="progress mb-2">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         style="width: 100%"></div>
+                </div>
+                <small class="text-muted">Monitoring CSV URL for new data</small>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Status update error:', error);
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if auto-processing is already running
+    startStatusUpdates();
+});
+
+// Auto-refresh submissions every 2 minutes
+setInterval(() => {
+    // You can add logic to refresh only the submissions table
+}, 120000);
+</script>
+
+<style>
+.ai-feature-card {
+    border-left: 4px solid #6f42c1;
+}
+
+.btn-ai {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);
+    border: none;
+    color: white;
+}
+
+.btn-ai:hover {
+    background: linear-gradient(135deg, #5a2d91 0%, #4a2478 100%);
+    color: white;
+}
+
+.text-purple {
+    color: #6f42c1;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+.table-sm td, .table-sm th {
+    padding: 0.5rem;
+}
+</style>
+{% endblock %}

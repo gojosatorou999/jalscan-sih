@@ -1,0 +1,895 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-cloud-fill text-primary me-2"></i>
+                Cloud Monitoring Dashboard
+            </h2>
+            <div>
+                <button class="btn btn-outline-primary me-2" onclick="refreshDashboard()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+                <span class="badge bg-success">
+                    <i class="bi bi-wifi"></i> Real-time
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Alert Banner -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div id="alertBanner" class="alert alert-warning alert-dismissible fade show d-none">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <div id="alertMessage"></div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Overview Cards -->
+<div class="row mb-4">
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-building display-6 mb-2"></i>
+                <h3 class="card-title" id="totalSites">0</h3>
+                <p class="card-text">Active Sites</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-cloud-upload display-6 mb-2"></i>
+                <h3 class="card-title" id="todaySubmissions">0</h3>
+                <p class="card-text">Today's Submissions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-people display-6 mb-2"></i>
+                <h3 class="card-title" id="activeAgents">0</h3>
+                <p class="card-text">Active Agents</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle display-6 mb-2"></i>
+                <h3 class="card-title" id="alertsCount">0</h3>
+                <p class="card-text">Active Alerts</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-clock-history display-6 mb-2"></i>
+                <h3 class="card-title" id="syncPending">0</h3>
+                <p class="card-text">Pending Sync</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="card bg-dark text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-speedometer2 display-6 mb-2"></i>
+                <h3 class="card-title" id="avgResponse">0s</h3>
+                <p class="card-text">Avg Response Time</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Left Column - Maps and Real-time Data -->
+    <div class="col-lg-8">
+        <!-- Live Activity Map -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                    Live Activity Map
+                </h5>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                    <label class="form-check-label" for="autoRefresh">Auto-refresh</label>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div id="activityMap" style="height: 400px; border-radius: 0.375rem;"></div>
+            </div>
+        </div>
+
+        <!-- Real-time Activity Feed -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-activity me-2"></i>
+                    Real-time Activity Feed
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="activityFeed" style="max-height: 400px; overflow-y: auto;">
+                    <div class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading activity...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading real-time activity...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - Alerts and Quick Actions -->
+    <div class="col-lg-4">
+        <!-- Critical Alerts -->
+        <div class="card mb-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-bell-fill me-2"></i>
+                    Critical Alerts
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="criticalAlerts" style="max-height: 200px; overflow-y: auto;">
+                    <div class="text-center py-3">
+                        <p class="text-muted mb-0">No critical alerts</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Site Status Overview -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-list-check me-2"></i>
+                    Site Status Overview
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="siteStatus" style="max-height: 250px; overflow-y: auto;">
+                    <div class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Loading sites...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading site status...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning-fill me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary btn-sm" onclick="forceSyncAll()">
+                        <i class="bi bi-cloud-arrow-up me-1"></i> Force Sync All
+                    </button>
+                    <button class="btn btn-outline-warning btn-sm" onclick="sendBroadcastAlert()">
+                        <i class="bi bi-megaphone me-1"></i> Broadcast Alert
+                    </button>
+                    <button class="btn btn-outline-info btn-sm" onclick="generateDailyReport()">
+                        <i class="bi bi-file-earmark-text me-1"></i> Daily Report
+                    </button>
+                    <button class="btn btn-outline-success btn-sm" onclick="openSiteManager()">
+                        <i class="bi bi-gear me-1"></i> Manage Sites
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Metrics -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Performance Metrics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div id="submissionTrendsChart" style="height: 250px;">
+                            <div class="text-center py-4">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Loading chart...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Loading submission trends...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div id="sitePerformanceChart" style="height: 250px;">
+                            <div class="text-center py-4">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Loading chart...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Loading site performance...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script>
+// Global variables
+let autoRefreshInterval = null;
+let submissionTrendsChart = null;
+let sitePerformanceChart = null;
+let activityMap = null;
+let mapMarkers = [];
+
+// Initialize dashboard
+async function initializeDashboard() {
+    await loadOverviewStats();
+    await initializeActivityMap();
+    await loadActivityFeed();
+    await loadCriticalAlerts();
+    await loadSiteStatus();
+    await loadPerformanceCharts();
+    
+    // Start auto-refresh if enabled
+    if (document.getElementById('autoRefresh').checked) {
+        startAutoRefresh();
+    }
+}
+
+// Load overview statistics
+async function loadOverviewStats() {
+    try {
+        const response = await fetch('/api/cloud-dashboard/overview');
+        const data = await response.json();
+        
+        document.getElementById('totalSites').textContent = data.total_sites || 0;
+        document.getElementById('todaySubmissions').textContent = data.today_submissions || 0;
+        document.getElementById('activeAgents').textContent = data.active_agents || 0;
+        document.getElementById('alertsCount').textContent = data.alerts_count || 0;
+        document.getElementById('syncPending').textContent = data.sync_pending || 0;
+        document.getElementById('avgResponse').textContent = (data.avg_response_time || 0) + 's';
+        
+    } catch (error) {
+        console.error('Error loading overview stats:', error);
+        // Set default values
+        document.getElementById('totalSites').textContent = '0';
+        document.getElementById('todaySubmissions').textContent = '0';
+        document.getElementById('activeAgents').textContent = '0';
+        document.getElementById('alertsCount').textContent = '0';
+        document.getElementById('syncPending').textContent = '0';
+        document.getElementById('avgResponse').textContent = '0s';
+    }
+}
+
+// Initialize activity map with OpenStreetMap
+async function initializeActivityMap() {
+    const mapContainer = document.getElementById('activityMap');
+    
+    // Initialize map
+    activityMap = L.map('activityMap').setView([20.5937, 78.9629], 5); // Center on India
+    
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18
+    }).addTo(activityMap);
+    
+    // Load site data and add markers
+    await loadSiteMarkers();
+}
+
+// Load site markers for the map
+async function loadSiteMarkers() {
+    try {
+        // Clear existing markers
+        mapMarkers.forEach(marker => activityMap.removeLayer(marker));
+        mapMarkers = [];
+        
+        // Get site status data which includes coordinates
+        const response = await fetch('/api/cloud-dashboard/site-status');
+        const sites = await response.json();
+        
+        let activeCount = 0;
+        let warningCount = 0;
+        let criticalCount = 0;
+        
+        sites.forEach(site => {
+            // Get site details including coordinates
+            fetch(`/api/get-site-info/${site.id}`)
+                .then(response => response.json())
+                .then(siteDetails => {
+                    if (siteDetails.latitude && siteDetails.longitude) {
+                        const lat = parseFloat(siteDetails.latitude);
+                        const lon = parseFloat(siteDetails.longitude);
+                        
+                        // Determine marker color based on status
+                        let markerColor = 'green';
+                        let statusText = 'Active';
+                        
+                        if (site.status === 'warning') {
+                            markerColor = 'orange';
+                            statusText = 'Warning';
+                            warningCount++;
+                        } else if (site.status === 'critical') {
+                            markerColor = 'red';
+                            statusText = 'Critical';
+                            criticalCount++;
+                        } else {
+                            activeCount++;
+                        }
+                        
+                        // Create custom icon
+                        const icon = L.divIcon({
+                            className: 'custom-marker',
+                            html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        });
+                        
+                        // Add marker to map
+                        const marker = L.marker([lat, lon], { icon: icon })
+                            .addTo(activityMap)
+                            .bindPopup(`
+                                <div class="text-center">
+                                    <h6 class="mb-1">${site.name}</h6>
+                                    <span class="badge bg-${site.status === 'active' ? 'success' : site.status === 'warning' ? 'warning' : 'danger'}">
+                                        ${statusText}
+                                    </span>
+                                    <p class="mb-1 mt-2 small">Submissions: ${site.submission_count}</p>
+                                    <small class="text-muted">Last activity: ${site.last_activity ? getTimeAgo(site.last_activity) : 'Never'}</small>
+                                </div>
+                            `);
+                        
+                        mapMarkers.push(marker);
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error loading site ${site.id} details:`, error);
+                });
+        });
+        
+        // Update map legend
+        updateMapLegend(activeCount, warningCount, criticalCount);
+        
+    } catch (error) {
+        console.error('Error loading site markers:', error);
+    }
+}
+
+// Update map legend
+function updateMapLegend(active, warning, critical) {
+    // Remove existing legend if any
+    const existingLegend = document.querySelector('.map-legend');
+    if (existingLegend) {
+        existingLegend.remove();
+    }
+    
+    // Create legend
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function(map) {
+        const div = L.DomUtil.create('div', 'map-legend');
+        div.innerHTML = `
+            <div class="bg-white p-3 rounded shadow-sm">
+                <h6 class="mb-2">Site Status</h6>
+                <div class="d-flex align-items-center mb-1">
+                    <div style="width: 12px; height: 12px; background-color: green; border-radius: 50%; border: 2px solid white; margin-right: 8px;"></div>
+                    <span>Active (${active})</span>
+                </div>
+                <div class="d-flex align-items-center mb-1">
+                    <div style="width: 12px; height: 12px; background-color: orange; border-radius: 50%; border: 2px solid white; margin-right: 8px;"></div>
+                    <span>Warning (${warning})</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div style="width: 12px; height: 12px; background-color: red; border-radius: 50%; border: 2px solid white; margin-right: 8px;"></div>
+                    <span>Critical (${critical})</span>
+                </div>
+            </div>
+        `;
+        return div;
+    };
+    legend.addTo(activityMap);
+}
+
+// Load real-time activity feed
+async function loadActivityFeed() {
+    try {
+        const response = await fetch('/api/cloud-dashboard/activity-feed');
+        const activities = await response.json();
+        
+        const feedContainer = document.getElementById('activityFeed');
+        
+        if (!activities || activities.length === 0) {
+            feedContainer.innerHTML = `
+                <div class="text-center py-4">
+                    <p class="text-muted mb-0">No recent activity</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let feedHTML = '';
+        activities.forEach(activity => {
+            const timeAgo = getTimeAgo(activity.timestamp);
+            const iconClass = getActivityIcon(activity.type);
+            const badgeClass = activity.type === 'submission' ? 'success' : 
+                              activity.type === 'alert' ? 'warning' : 'info';
+            
+            feedHTML += `
+                <div class="border-bottom p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-${badgeClass} me-2 text-capitalize">
+                                    ${activity.type}
+                                </span>
+                                <small class="text-muted">${timeAgo}</small>
+                            </div>
+                            <p class="mb-1 small">${activity.message}</p>
+                            <small class="text-muted">
+                                ${activity.site_name ? `Site: ${activity.site_name}` : ''}
+                                ${activity.agent_name ? ` • Agent: ${activity.agent_name}` : ''}
+                            </small>
+                        </div>
+                        <i class="bi bi-${iconClass} text-${badgeClass} fs-5"></i>
+                    </div>
+                </div>
+            `;
+        });
+        
+        feedContainer.innerHTML = feedHTML;
+        
+    } catch (error) {
+        console.error('Error loading activity feed:', error);
+        const feedContainer = document.getElementById('activityFeed');
+        feedContainer.innerHTML = `
+            <div class="text-center py-4">
+                <p class="text-danger mb-0">Failed to load activity feed</p>
+            </div>
+        `;
+    }
+}
+
+// Load critical alerts with tamper detection
+async function loadCriticalAlerts() {
+    try {
+        const response = await fetch('/api/cloud-dashboard/critical-alerts');
+        const alerts = await response.json();
+        
+        // Add tamper detection alerts
+        try {
+            const tamperResponse = await fetch('/api/tamper-detection/overview');
+            const tamperData = await tamperResponse.json();
+            
+            // Add high-severity tamper detections
+            tamperData.recent_detections
+                .filter(d => d.severity === 'high' || d.severity === 'critical')
+                .forEach(detection => {
+                    alerts.push({
+                        'title': `Tamper Detection: ${detection.detection_type}`,
+                        'message': detection.description,
+                        'timestamp': detection.detected_at,
+                        'site_name': detection.site_name,
+                        'severity': detection.severity
+                    });
+                });
+            
+            // Add agent behavior alerts
+            tamperData.agent_alerts.forEach(alert => {
+                alerts.push({
+                    'title': `Agent Behavior Alert: ${alert.agent_name}`,
+                    'message': `Suspicious activity detected (${(alert.suspicious_ratio * 100).toFixed(1)}% suspicious submissions)`,
+                    'timestamp': new Date().toISOString(),
+                    'site_name': 'Multiple Sites',
+                    'severity': alert.status
+                });
+            });
+            
+        } catch (tamperError) {
+            console.error('Error loading tamper alerts:', tamperError);
+        }
+        
+        const alertsContainer = document.getElementById('criticalAlerts');
+        
+        if (!alerts || alerts.length === 0) {
+            alertsContainer.innerHTML = `
+                <div class="text-center py-3">
+                    <i class="bi bi-check-circle text-success display-6 mb-2"></i>
+                    <p class="text-muted mb-0">All systems operational</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let alertsHTML = '';
+        alerts.forEach(alert => {
+            alertsHTML += `
+                <div class="border-bottom p-3">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2 mt-1"></i>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">${alert.title}</h6>
+                            <p class="mb-1 small">${alert.message}</p>
+                            <small class="text-muted">
+                                ${getTimeAgo(alert.timestamp)}
+                                ${alert.site_name ? ` • ${alert.site_name}` : ''}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        alertsContainer.innerHTML = alertsHTML;
+        
+        // Show alert banner if there are critical alerts
+        if (alerts.length > 0) {
+            showAlertBanner(`${alerts.length} critical alert(s) require attention`);
+        }
+        
+    } catch (error) {
+        console.error('Error in critical alerts:', error);
+    }
+}
+
+// Load site status
+async function loadSiteStatus() {
+    try {
+        const response = await fetch('/api/cloud-dashboard/site-status');
+        const sites = await response.json();
+        
+        const statusContainer = document.getElementById('siteStatus');
+        
+        if (!sites || sites.length === 0) {
+            statusContainer.innerHTML = `
+                <div class="text-center py-3">
+                    <p class="text-muted mb-0">No sites configured</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let statusHTML = '';
+        sites.forEach(site => {
+            const statusClass = site.status === 'active' ? 'success' : 
+                              site.status === 'warning' ? 'warning' : 'danger';
+            const lastActivity = site.last_activity ? getTimeAgo(site.last_activity) : 'No activity';
+            
+            statusHTML += `
+                <div class="border-bottom p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">${site.name}</h6>
+                            <small class="text-muted">${lastActivity}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-${statusClass} mb-1 text-capitalize">${site.status}</span>
+                            <br>
+                            <small class="text-muted">${site.submission_count || 0} submissions</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        statusContainer.innerHTML = statusHTML;
+        
+    } catch (error) {
+        console.error('Error loading site status:', error);
+    }
+}
+
+// Load performance charts
+async function loadPerformanceCharts() {
+    try {
+        const response = await fetch('/api/cloud-dashboard/performance-metrics');
+        const metrics = await response.json();
+        
+        // Submission Trends Chart
+        const trendsCtx = document.createElement('canvas');
+        document.getElementById('submissionTrendsChart').innerHTML = '';
+        document.getElementById('submissionTrendsChart').appendChild(trendsCtx);
+        
+        submissionTrendsChart = new Chart(trendsCtx, {
+            type: 'line',
+            data: {
+                labels: metrics.submission_trends?.labels || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Submissions',
+                    data: metrics.submission_trends?.data || [0, 0, 0, 0, 0, 0, 0],
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Submission Trends (7 Days)'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Site Performance Chart
+        const performanceCtx = document.createElement('canvas');
+        document.getElementById('sitePerformanceChart').innerHTML = '';
+        document.getElementById('sitePerformanceChart').appendChild(performanceCtx);
+        
+        sitePerformanceChart = new Chart(performanceCtx, {
+            type: 'bar',
+            data: {
+                labels: metrics.site_performance?.labels || ['Site 1', 'Site 2', 'Site 3', 'Site 4', 'Site 5'],
+                datasets: [{
+                    label: 'Submissions',
+                    data: metrics.site_performance?.data || [0, 0, 0, 0, 0],
+                    backgroundColor: [
+                        '#198754', '#20c997', '#0dcaf0', '#6f42c1', '#fd7e14'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Top Sites by Activity'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error loading performance charts:', error);
+    }
+}
+
+// Utility functions
+function getTimeAgo(timestamp) {
+    if (!timestamp) return 'Never';
+    
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffMs = now - time;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
+}
+
+function getActivityIcon(type) {
+    const icons = {
+        'submission': 'cloud-upload',
+        'alert': 'exclamation-triangle',
+        'sync': 'arrow-repeat',
+        'user': 'person'
+    };
+    return icons[type] || 'activity';
+}
+
+function showAlertBanner(message) {
+    const banner = document.getElementById('alertBanner');
+    const alertMessage = document.getElementById('alertMessage');
+    alertMessage.textContent = message;
+    banner.classList.remove('d-none');
+}
+
+// Action functions
+function refreshDashboard() {
+    initializeDashboard();
+    showToast('Dashboard refreshed', 'success');
+}
+
+function startAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    autoRefreshInterval = setInterval(refreshDashboard, 30000); // Refresh every 30 seconds
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
+
+async function forceSyncAll() {
+    try {
+        const response = await fetch('/api/sync/force-sync', { method: 'POST' });
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Force sync initiated', 'success');
+            refreshDashboard();
+        } else {
+            showToast('Sync failed: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        showToast('Sync request failed', 'danger');
+    }
+}
+
+async function sendBroadcastAlert() {
+    const message = prompt('Enter broadcast message:');
+    if (message) {
+        showToast('Broadcast sent to all agents', 'info');
+    }
+}
+
+async function generateDailyReport() {
+    showToast('Daily report generation started', 'info');
+    // In a real implementation, this would trigger report generation
+}
+
+function openSiteManager() {
+    window.location.href = '/admin/sites';
+}
+
+function showToast(message, type) {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+    }, 3000);
+}
+
+// Event listeners
+document.getElementById('autoRefresh').addEventListener('change', function() {
+    if (this.checked) {
+        startAutoRefresh();
+    } else {
+        stopAutoRefresh();
+    }
+});
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDashboard();
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    stopAutoRefresh();
+});
+</script>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+#activityFeed, #criticalAlerts, #siteStatus {
+    scrollbar-width: thin;
+    scrollbar-color: #dee2e6 transparent;
+}
+
+#activityFeed::-webkit-scrollbar,
+#criticalAlerts::-webkit-scrollbar,
+#siteStatus::-webkit-scrollbar {
+    width: 6px;
+}
+
+#activityFeed::-webkit-scrollbar-track,
+#criticalAlerts::-webkit-scrollbar-track,
+#siteStatus::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#activityFeed::-webkit-scrollbar-thumb,
+#criticalAlerts::-webkit-scrollbar-thumb,
+#siteStatus::-webkit-scrollbar-thumb {
+    background-color: #dee2e6;
+    border-radius: 3px;
+}
+
+.badge {
+    font-size: 0.7em;
+}
+
+.display-6 {
+    font-size: 2rem;
+}
+
+/* Leaflet map styles */
+.leaflet-container {
+    background: #f8f9fa;
+}
+
+.custom-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.map-legend {
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    .col-6 {
+        margin-bottom: 1rem;
+    }
+    
+    .display-6 {
+        font-size: 1.5rem;
+    }
+    
+    #activityMap {
+        height: 300px !important;
+    }
+}
+</style>
+{% endblock %}

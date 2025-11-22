@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Create New User</h2>
+            <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Users
+            </a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">User Creation Form</h5>
+                <p class="text-muted mb-0">Create new supervisors or analysts</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="create-user-form">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Role *</label>
+                                <select class="form-select" name="role" required id="role-select">
+                                    <option value="">Select Role</option>
+                                    <option value="supervisor">Supervisor</option>
+                                    <option value="central_analyst">Central Analyst</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3" id="river-assignment" style="display: none;">
+                                <label class="form-label">Assigned River (for Supervisors)</label>
+                                <select class="form-select" name="assigned_river">
+                                    <option value="">Select River (Optional)</option>
+                                    <option value="Multiple">Multiple Rivers</option>
+                                    {% for river in rivers %}
+                                    <option value="{{ river.river_code }}">{{ river.name }} ({{ river.river_code }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Username *</label>
+                                <input type="text" class="form-control" name="username" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Password *</label>
+                                <input type="password" class="form-control" name="password" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" name="full_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" name="phone">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i> Create User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Show/hide river assignment based on role selection
+document.getElementById('role-select').addEventListener('change', function() {
+    const riverAssignment = document.getElementById('river-assignment');
+    if (this.value === 'supervisor') {
+        riverAssignment.style.display = 'block';
+    } else {
+        riverAssignment.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

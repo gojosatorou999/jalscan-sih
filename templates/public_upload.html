@@ -1,0 +1,597 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">Submit Water Level Image</h4>
+                <small class="text-light">Help monitor water levels by submitting photos</small>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Public Submission:</strong> Anyone can contribute images to help monitor water levels. 
+                    Your submission will be reviewed by our team. Identity verification is required for submission.
+                </div>
+
+                <!-- Progress Steps -->
+                <div class="mb-4">
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="step step-active" data-step="1">ID Selection</span>
+                        <span class="step" data-step="2">ID Upload</span>
+                        <span class="step" data-step="3">Live Photo</span>
+                        <span class="step" data-step="4">Site Details</span>
+                        <span class="step" data-step="5">Confirmation</span>
+                    </div>
+                </div>
+
+                <form id="public-upload-form">
+                    <!-- Step 1: ID Type Selection -->
+                    <div class="step-content" id="step-1">
+                        <h5 class="mb-3">Step 1: Select Government ID Type</h5>
+                        <div class="mb-3">
+                            <label for="id_type" class="form-label">Government ID Type *</label>
+                            <select class="form-select" id="id_type" name="id_type" required>
+                                <option value="">Select your government ID type...</option>
+                                <option value="aadhaar">Aadhaar Card</option>
+                                <option value="voter_id">Voter ID Card</option>
+                                <option value="driving_license">Driving License</option>
+                                <option value="pan_card">PAN Card</option>
+                                <option value="passport">Passport</option>
+                                <option value="other">Other Government ID</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-warning">
+                            <small>
+                                <i class="bi bi-shield-check"></i>
+                                Your ID will only be used for verification purposes and will be stored securely.
+                            </small>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <div></div> <!-- Spacer -->
+                            <button type="button" class="btn btn-primary next-step" data-next="2">Next</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: ID Upload -->
+                    <div class="step-content" id="step-2" style="display: none;">
+                        <h5 class="mb-3">Step 2: Upload Government ID</h5>
+                        <div class="mb-3">
+                            <label for="govt_id_front" class="form-label">Front Side of ID *</label>
+                            <input type="file" class="form-control" id="govt_id_front" name="govt_id_front" accept="image/*" required>
+                            <div class="form-text">Upload a clear photo of the front side of your selected government ID</div>
+                            <div id="id-front-preview" class="mt-2" style="display: none;">
+                                <img id="preview-id-front" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 2px solid #dee2e6;">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="govt_id_back" class="form-label">Back Side of ID (Optional)</label>
+                            <input type="file" class="form-control" id="govt_id_back" name="govt_id_back" accept="image/*">
+                            <div class="form-text">Upload back side if required for your ID type</div>
+                            <div id="id-back-preview" class="mt-2" style="display: none;">
+                                <img id="preview-id-back" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 2px solid #dee2e6;">
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary prev-step" data-prev="1">Previous</button>
+                            <button type="button" class="btn btn-primary next-step" data-next="3">Next</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Live Photo Capture -->
+                    <div class="step-content" id="step-3" style="display: none;">
+                        <h5 class="mb-3">Step 3: Take Live Photo</h5>
+                        <div class="mb-3">
+                            <div class="alert alert-warning">
+                                <i class="bi bi-camera"></i>
+                                <strong>Important:</strong> Please take a live photo of yourself holding your government ID for verification.
+                            </div>
+                            
+                            <div class="text-center mb-3">
+                                <video id="video" width="100%" height="300" autoplay muted style="border-radius: 8px; background: #f8f9fa;"></video>
+                                <canvas id="canvas" style="display: none;"></canvas>
+                            </div>
+                            
+                            <div class="text-center mb-3">
+                                <button type="button" id="start-camera" class="btn btn-outline-primary">
+                                    <i class="bi bi-camera-video"></i> Start Camera
+                                </button>
+                                <button type="button" id="capture-btn" class="btn btn-success" style="display: none;">
+                                    <i class="bi bi-camera"></i> Capture Photo
+                                </button>
+                                <button type="button" id="retake-btn" class="btn btn-outline-warning" style="display: none;">
+                                    <i class="bi bi-arrow-clockwise"></i> Retake
+                                </button>
+                            </div>
+                            
+                            <div id="captured-photo-preview" class="text-center" style="display: none;">
+                                <h6>Captured Photo Preview:</h6>
+                                <img id="captured-img" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 3px solid #28a745;">
+                                <div class="mt-2">
+                                    <small class="text-success">
+                                        <i class="bi bi-check-circle"></i> Photo captured successfully
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary prev-step" data-prev="2">Previous</button>
+                            <button type="button" class="btn btn-primary next-step" data-next="4">Next</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Site Details -->
+                    <div class="step-content" id="step-4" style="display: none;">
+                        <h5 class="mb-3">Step 4: Monitoring Site Details</h5>
+                        
+                        <div class="mb-3">
+                            <label for="site_id" class="form-label">Monitoring Site *</label>
+                            <select class="form-select" id="site_id" name="site_id" required>
+                                <option value="">Select a monitoring site...</option>
+                                {% for site in sites %}
+                                <option value="{{ site.id }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Location (Optional)</label>
+                            <div class="alert alert-warning">
+                                <small>
+                                    <i class="bi bi-geo-alt"></i>
+                                    Allow location access for automatic GPS coordinates, or skip this step.
+                                </small>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="latitude" class="form-label">Latitude</label>
+                                    <input type="number" step="any" class="form-control" id="latitude" name="latitude" placeholder="Auto-detected">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="longitude" class="form-label">Longitude</label>
+                                    <input type="number" step="any" class="form-control" id="longitude" name="longitude" placeholder="Auto-detected">
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <button type="button" id="get-location-btn" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-geo-alt"></i> Get My Location
+                                </button>
+                                <small id="location-status" class="text-muted ms-2"></small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="photo" class="form-label">Water Level Photo *</label>
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*" capture="environment" required>
+                            <div class="form-text">
+                                Take a clear photo of the water level gauge. Supported formats: JPG, PNG (max 16MB)
+                            </div>
+                            <div id="photo-preview" class="mt-2" style="display: none;">
+                                <img id="preview-img" style="max-width: 100%; max-height: 300px; border-radius: 8px;">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      placeholder="Any additional information about the water level, weather conditions, etc."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contact_email" class="form-label">Email (Optional)</label>
+                            <input type="email" class="form-control" id="contact_email" name="contact_email" 
+                                   placeholder="your.email@example.com">
+                            <div class="form-text">If you'd like to be notified when your submission is reviewed.</div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary prev-step" data-prev="3">Previous</button>
+                            <button type="button" class="btn btn-primary next-step" data-next="5">Next</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Confirmation -->
+                    <div class="step-content" id="step-5" style="display: none;">
+                        <h5 class="mb-3">Step 5: Review and Confirm</h5>
+                        
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle"></i> Please Review Your Submission</h6>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6>Submission Summary:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><strong>ID Type:</strong> <span id="summary-id-type"></span></li>
+                                        <li><strong>Monitoring Site:</strong> <span id="summary-site"></span></li>
+                                        <li><strong>Location:</strong> <span id="summary-location">Not provided</span></li>
+                                        <li><strong>Description:</strong> <span id="summary-description">None</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="verification_checkbox" required>
+                                <label class="form-check-label" for="verification_checkbox">
+                                    <strong>I hereby declare that:</strong>
+                                    <ul class="small mt-2">
+                                        <li>The information provided is true and accurate to the best of my knowledge</li>
+                                        <li>The government ID uploaded is valid and belongs to me</li>
+                                        <li>The live photo is of myself and was taken for this submission</li>
+                                        <li>The water level photo was taken by me at the specified location</li>
+                                        <li>I agree to the terms of use and privacy policy</li>
+                                    </ul>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <small>
+                                <i class="bi bi-info-circle"></i>
+                                Your submission will be reviewed by our team. You may receive email updates if you provided an email address.
+                            </small>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary prev-step" data-prev="4">Previous</button>
+                            <button type="submit" class="btn btn-success" id="submit-btn">
+                                <i class="bi bi-cloud-upload"></i> Submit Report
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Submission Successful!</h5>
+            </div>
+            <div class="modal-body">
+                <p>Thank you for your contribution! Your image has been submitted for review.</p>
+                <p>Our team will process your submission and it will help in monitoring water levels.</p>
+                <p class="text-muted small">A verification email has been sent to your provided email address.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Submit Another Report</button>
+                <a href="{{ url_for('public_upload') }}" class="btn btn-outline-secondary">Return to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.step {
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6c757d;
+    position: relative;
+    flex: 1;
+    text-align: center;
+    margin: 0 2px;
+}
+
+.step-active {
+    background: #007bff;
+    color: white;
+}
+
+.step-content {
+    transition: all 0.3s ease;
+}
+
+.progress-bar {
+    transition: width 0.5s ease;
+}
+
+#captured-img, #preview-id-front, #preview-id-back {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('public-upload-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const steps = document.querySelectorAll('.step');
+    const stepContents = document.querySelectorAll('.step-content');
+    
+    // Camera elements
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const startCameraBtn = document.getElementById('start-camera');
+    const captureBtn = document.getElementById('capture-btn');
+    const retakeBtn = document.getElementById('retake-btn');
+    const capturedPhotoPreview = document.getElementById('captured-photo-preview');
+    const capturedImg = document.getElementById('captured-img');
+    
+    let currentStep = 1;
+    let stream = null;
+    let capturedPhotoDataUrl = null;
+
+    // Update progress bar and steps
+    function updateProgress() {
+        const progress = ((currentStep - 1) / 4) * 100;
+        progressBar.style.width = `${progress}%`;
+        
+        steps.forEach((step, index) => {
+            if (index + 1 <= currentStep) {
+                step.classList.add('step-active');
+            } else {
+                step.classList.remove('step-active');
+            }
+        });
+    }
+
+    // Show specific step
+    function showStep(stepNumber) {
+        stepContents.forEach(content => {
+            content.style.display = 'none';
+        });
+        document.getElementById(`step-${stepNumber}`).style.display = 'block';
+        currentStep = stepNumber;
+        updateProgress();
+    }
+
+    // Next step buttons
+    document.querySelectorAll('.next-step').forEach(button => {
+        button.addEventListener('click', function() {
+            const nextStep = parseInt(this.dataset.next);
+            
+            // Validate current step before proceeding
+            if (currentStep === 1 && !document.getElementById('id_type').value) {
+                alert('Please select a government ID type');
+                return;
+            }
+            
+            if (currentStep === 2 && !document.getElementById('govt_id_front').files[0]) {
+                alert('Please upload the front side of your government ID');
+                return;
+            }
+            
+            if (currentStep === 3 && !capturedPhotoDataUrl) {
+                alert('Please capture a live photo of yourself holding your ID');
+                return;
+            }
+            
+            if (currentStep === 4) {
+                // Update summary for confirmation step
+                document.getElementById('summary-id-type').textContent = 
+                    document.getElementById('id_type').options[document.getElementById('id_type').selectedIndex].text;
+                document.getElementById('summary-site').textContent = 
+                    document.getElementById('site_id').options[document.getElementById('site_id').selectedIndex].text;
+                
+                const lat = document.getElementById('latitude').value;
+                const lon = document.getElementById('longitude').value;
+                if (lat && lon) {
+                    document.getElementById('summary-location').textContent = `${lat}, ${lon}`;
+                }
+                
+                const desc = document.getElementById('description').value;
+                document.getElementById('summary-description').textContent = desc || 'None';
+            }
+            
+            showStep(nextStep);
+        });
+    });
+
+    // Previous step buttons
+    document.querySelectorAll('.prev-step').forEach(button => {
+        button.addEventListener('click', function() {
+            const prevStep = parseInt(this.dataset.prev);
+            showStep(prevStep);
+        });
+    });
+
+    // Camera functionality
+    startCameraBtn.addEventListener('click', async function() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                }, 
+                audio: false 
+            });
+            
+            video.srcObject = stream;
+            startCameraBtn.style.display = 'none';
+            captureBtn.style.display = 'inline-block';
+        } catch (err) {
+            alert('Error accessing camera: ' + err.message);
+        }
+    });
+
+    captureBtn.addEventListener('click', function() {
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        capturedPhotoDataUrl = canvas.toDataURL('image/jpeg');
+        capturedImg.src = capturedPhotoDataUrl;
+        capturedPhotoPreview.style.display = 'block';
+        captureBtn.style.display = 'none';
+        retakeBtn.style.display = 'inline-block';
+        
+        // Stop camera stream
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
+
+    retakeBtn.addEventListener('click', function() {
+        capturedPhotoDataUrl = null;
+        capturedPhotoPreview.style.display = 'none';
+        retakeBtn.style.display = 'none';
+        startCameraBtn.style.display = 'inline-block';
+        startCameraBtn.click();
+    });
+
+    // ID photo preview
+    document.getElementById('govt_id_front').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview-id-front').src = e.target.result;
+                document.getElementById('id-front-preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    document.getElementById('govt_id_back').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview-id-back').src = e.target.result;
+                document.getElementById('id-back-preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Water level photo preview
+    document.getElementById('photo').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview-img').src = e.target.result;
+                document.getElementById('photo-preview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Location functionality
+    document.getElementById('get-location-btn').addEventListener('click', function() {
+        if (!navigator.geolocation) {
+            document.getElementById('location-status').textContent = 'Geolocation not supported';
+            return;
+        }
+
+        this.disabled = true;
+        document.getElementById('location-status').textContent = 'Getting location...';
+        document.getElementById('location-status').className = 'text-warning';
+
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                document.getElementById('latitude').value = position.coords.latitude.toFixed(6);
+                document.getElementById('longitude').value = position.coords.longitude.toFixed(6);
+                document.getElementById('location-status').textContent = 'Location acquired!';
+                document.getElementById('location-status').className = 'text-success';
+                document.getElementById('get-location-btn').disabled = false;
+            },
+            function(error) {
+                let message = 'Location access denied or unavailable';
+                if (error.code === error.PERMISSION_DENIED) {
+                    message = 'Location access denied. You can still submit without location.';
+                }
+                document.getElementById('location-status').textContent = message;
+                document.getElementById('location-status').className = 'text-danger';
+                document.getElementById('get-location-btn').disabled = false;
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    });
+
+    // Form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!document.getElementById('verification_checkbox').checked) {
+            alert('Please confirm the declaration by checking the checkbox');
+            return;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Submitting...';
+
+        try {
+            const formData = new FormData(form);
+            
+            // Add captured photo to form data
+            if (capturedPhotoDataUrl) {
+                const blob = dataURLtoBlob(capturedPhotoDataUrl);
+                formData.append('live_photo', blob, 'live_photo.jpg');
+            }
+            
+            const response = await fetch('/api/public/submit-image', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                successModal.show();
+                form.reset();
+                // Reset all previews
+                document.querySelectorAll('[id$="-preview"]').forEach(preview => {
+                    preview.style.display = 'none';
+                });
+                capturedPhotoDataUrl = null;
+                showStep(1); // Reset to first step
+            } else {
+                alert('Error: ' + result.error);
+            }
+
+        } catch (error) {
+            alert('Submission failed: ' + error.message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Submit Report';
+        }
+    });
+
+    // Helper function to convert data URL to blob
+    function dataURLtoBlob(dataURL) {
+        const parts = dataURL.split(';base64,');
+        const contentType = parts[0].split(':')[1];
+        const raw = window.atob(parts[1]);
+        const uInt8Array = new Uint8Array(raw.length);
+        
+        for (let i = 0; i < raw.length; ++i) {
+            uInt8Array[i] = raw.charCodeAt(i);
+        }
+        
+        return new Blob([uInt8Array], { type: contentType });
+    }
+
+    // Initialize first step
+    updateProgress();
+});
+</script>
+{% endblock %}

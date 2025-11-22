@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Call Reporting</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --ai-purple: #6f42c1;
+            --ai-purple-light: #8c68d6;
+            --ai-purple-dark: #5a32a3;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        
+        .ai-feature-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .ai-feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--ai-purple), var(--ai-purple-light));
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 1.5rem;
+        }
+        
+        .btn-ai {
+            background-color: var(--ai-purple);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-ai:hover {
+            background-color: var(--ai-purple-dark);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .text-purple {
+            color: var(--ai-purple) !important;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background-color: #28a745;
+        }
+        
+        .status-inactive {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="ai-feature-card">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0">
+                            <i class="bi bi-robot"></i> AI Call Reporting
+                        </h4>
+                        <p class="mb-0">AI-powered analysis and reporting</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center py-4">
+                            <i class="bi bi-robot display-1 text-purple mb-3"></i>
+                            <h3>AI Call Reporting</h3>
+                            <p class="text-muted mb-4">Access advanced AI calling features and analytics</p>
+                            
+                            <div class="d-flex justify-content-center mb-4">
+                                <div class="me-4">
+                                    <span class="status-indicator status-active"></span>
+                                    <span>System Online</span>
+                                </div>
+                                <div>
+                                    <span class="status-indicator status-active"></span>
+                                    <span>AI Services Active</span>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-ai" id="aiCallingBtn">
+                                <i class="bi bi-play-circle"></i> Launch AI Calling
+                            </button>
+                            
+                            <div class="mt-4">
+                                <p class="small text-muted">Click the button above to access the full AI calling interface</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('aiCallingBtn').addEventListener('click', function() {
+            // Open the specified URL in a new tab
+            window.open('https://dff0f279-5ffa-4c2e-acc1-331c7beb5048-00-99iepi8lf615.pike.replit.dev/', '_blank');
+        });
+    </script>
+</body>
+</html>
