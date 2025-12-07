@@ -50,3 +50,66 @@ def add_timestamp_to_image(image_path, timestamp, latitude, longitude):
     except Exception as e:
         print(f"Error adding timestamp to image: {e}")
         return False
+
+def analyze_water_gauge(image_path):
+    """
+    Analyze the image using Gemini API to read the water level gauge.
+    Returns a dictionary:
+    {
+        "water_level": float or None,
+        "confidence": float (0.0 to 1.0),
+        "is_valid": bool,
+        "reason": str
+    }
+    """
+    import google.generativeai as genai
+    import json
+    
+    api_key = os.environ.get('GEMINI_API_KEY')
+    if not api_key:
+        print("GEMINI_API_KEY not found in environment variables.")
+        return None
+        
+    try:
+        genai.configure(api_key=api_key)
+        
+        # Set up the model
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
+        # Load the image
+        img = Image.open(image_path)
+        
+        # Prompt for the model
+        prompt = """
+        Analyze this image of a water level gauge. 
+        Return a JSON object with the following fields:
+        - "water_level": The numeric value in meters (float). If not visible, use null.
+        - "confidence": A score from 0.0 to 1.0 indicating how sure you are.
+        - "is_valid": Boolean, true if the image clearly shows a water gauge, false if blurry or irrelevant.
+        - "reason": A short string explaining the result (e.g., "Clear reading", "Image too blurry", "No gauge found").
+        
+        Return ONLY the JSON string. No markdown formatting.
+        """
+        
+        response = model.generate_content([prompt, img])
+        text = response.text.strip()
+        
+        # Clean up potential markdown code blocks
+        if text.startswith('```json'):
+            text = text[7:]
+        if text.endswith('```'):
+            text = text[:-3]
+        text = text.strip()
+        
+        print(f"Gemini AI Response: {text}")
+        
+        try:
+            result = json.loads(text)
+            return result
+        except json.JSONDecodeError:
+            print(f"Could not parse AI response as JSON: {text}")
+            return None
+            
+    except Exception as e:
+        print(f"Gemini API Error: {e}")
+        return None

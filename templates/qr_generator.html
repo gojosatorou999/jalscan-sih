@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,16 +14,19 @@
             min-height: 100vh;
             padding: 20px;
         }
+
         .main-container {
             max-width: 1400px;
             margin: 0 auto;
         }
+
         .card {
             border: none;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
         }
+
         .qr-preview {
             background: white;
             padding: 30px;
@@ -34,19 +38,23 @@
             justify-content: center;
             align-items: center;
         }
+
         .site-card {
             cursor: pointer;
             transition: all 0.3s ease;
             border: 2px solid transparent;
         }
+
         .site-card:hover {
             transform: translateY(-5px);
             border-color: #007bff;
         }
+
         .site-card.active {
             border-color: #007bff;
             background: #e3f2fd;
         }
+
         .btn-download {
             background: linear-gradient(135deg, #28a745, #20c997);
             border: none;
@@ -55,6 +63,7 @@
             font-weight: 600;
             margin-top: 20px;
         }
+
         .preview-label {
             background: #007bff;
             color: white;
@@ -64,18 +73,22 @@
             margin-bottom: 15px;
             display: inline-block;
         }
+
         .qr-code-img {
             max-width: 250px;
             height: auto;
         }
+
         .qr-mini-container img {
             max-width: 120px;
             height: auto;
         }
+
         .river-icon {
             font-size: 1.2rem;
             margin-right: 8px;
         }
+
         .batch-download {
             background: linear-gradient(135deg, #ff6b6b, #ee5a52);
             border: none;
@@ -83,12 +96,14 @@
             padding: 10px 20px;
             font-weight: 600;
         }
+
         .search-box {
             border-radius: 25px;
             padding: 10px 20px;
         }
     </style>
 </head>
+
 <body>
     <div class="main-container">
         <!-- Header -->
@@ -133,7 +148,8 @@
                         <!-- Quick Site Cards -->
                         <h6 class="text-muted mb-3">Quick Select:</h6>
                         <div class="mb-3">
-                            <input type="text" class="form-control search-box" id="siteSearch" placeholder="🔍 Search sites...">
+                            <input type="text" class="form-control search-box" id="siteSearch"
+                                placeholder="🔍 Search sites...">
                         </div>
                         <div class="row g-2" id="siteCardsContainer">
                             <!-- Site cards will be populated dynamically -->
@@ -155,7 +171,8 @@
                             <li>Scan with JalScan app for location verification</li>
                         </ol>
                         <div class="alert alert-warning small mb-0">
-                            <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> Use "Download All QR Codes" to get all site QR codes in one go.
+                            <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> Use "Download All QR Codes" to get all
+                            site QR codes in one go.
                         </div>
                     </div>
                 </div>
@@ -198,7 +215,8 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <input type="text" class="form-control search-box" id="qrSearch" placeholder="🔍 Search QR codes...">
+                            <input type="text" class="form-control search-box" id="qrSearch"
+                                placeholder="🔍 Search QR codes...">
                         </div>
                         <div class="row g-3" id="allQRCodes">
                             <!-- All QR codes will be generated here -->
@@ -216,78 +234,24 @@
 
         // Define all rivers with their data
         const riverSites = [
-            {
-                data: 'GANGA_HARIDWAR_001',
-                name: 'Ganga River - Haridwar',
-                icon: '🌊',
-                basin: 'Ganga',
-                state: 'Uttarakhand'
-            },
-            {
-                data: 'MUSI_HYDERABAD_001',
-                name: 'Musi River - Hyderabad',
-                icon: '💧',
-                basin: 'Krishna',
-                state: 'Telangana'
-            },
-            {
-                data: 'YAMUNA_DELHI_001',
-                name: 'Yamuna River - Delhi',
-                icon: '🏞️',
-                basin: 'Yamuna',
-                state: 'Delhi'
-            },
-            {
-                data: 'GODAVARI_NASHIK_001',
-                name: 'Godavari River - Nashik',
-                icon: '🌅',
-                basin: 'Godavari',
-                state: 'Maharashtra'
-            },
-            {
-                data: 'KRISHNA_VIJAYAWADA_001',
-                name: 'Krishna River - Vijayawada',
-                icon: '🌀',
-                basin: 'Krishna',
-                state: 'Andhra Pradesh'
-            },
-            {
-                data: 'KAVERI_001',
-                name: 'Kaveri River',
-                icon: '💦',
-                basin: 'Kaveri',
-                state: 'Karnataka'
-            },
-            {
-                data: 'BRAHMAPUTRA_001',
-                name: 'Brahmaputra River',
-                icon: '🌊',
-                basin: 'Brahmaputra',
-                state: 'Assam'
-            },
-            {
-                data: 'NARMADA_001',
-                name: 'Narmada River',
-                icon: '🏔️',
-                basin: 'Narmada',
-                state: 'Madhya Pradesh'
-            },
-            {
-                data: 'TRIPTI_001',
-                name: 'Tripti River',
-                icon: '🌿',
-                basin: 'Tripti',
-                state: 'West Bengal'
-            }
+            {% for site in sites %}
+        {
+            data: '{{ site.qr_code }}',
+                name: '{{ site.name }}',
+                    icon: '🌊',
+                        basin: '{{ site.river_basin }}',
+                            state: '{{ site.state }}'
+        },
+        {% endfor %}
         ];
 
         // Initialize - Generate all site QR codes
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             initializeSiteData();
             generateAllSiteQRCodes();
             populateSiteSelect();
             populateSiteCards();
-            
+
             // Auto-generate first QR code on load
             setTimeout(() => {
                 if (!currentQRCode && allSites.length > 0) {
@@ -303,7 +267,7 @@
         function populateSiteSelect() {
             const siteSelect = document.getElementById('siteSelect');
             siteSelect.innerHTML = '<option value="">Choose a site...</option>';
-            
+
             allSites.forEach(site => {
                 const option = document.createElement('option');
                 option.value = site.data;
@@ -315,7 +279,7 @@
         function populateSiteCards() {
             const container = document.getElementById('siteCardsContainer');
             container.innerHTML = '';
-            
+
             allSites.forEach(site => {
                 const col = document.createElement('div');
                 col.className = 'col-12';
@@ -335,9 +299,9 @@
                     </div>
                 `;
                 container.appendChild(col);
-                
+
                 // Add click event
-                col.querySelector('.site-card').addEventListener('click', function() {
+                col.querySelector('.site-card').addEventListener('click', function () {
                     selectSite(site.data, site.name);
                 });
             });
@@ -347,7 +311,7 @@
             document.getElementById('siteSelect').value = qrData;
             document.getElementById('customQR').value = '';
             generateQR();
-            
+
             // Highlight selected card
             document.querySelectorAll('.site-card').forEach(card => {
                 card.classList.remove('active');
@@ -360,16 +324,16 @@
         function generateQR() {
             let qrData = document.getElementById('siteSelect').value;
             const customData = document.getElementById('customQR').value.trim();
-            
+
             if (customData) {
                 qrData = customData;
             }
-            
+
             if (!qrData) {
                 alert('Please select a site or enter custom QR code data');
                 return;
             }
-            
+
             // Determine site name
             let siteName = 'Custom Site';
             const siteSelect = document.getElementById('siteSelect');
@@ -378,22 +342,22 @@
             } else if (customData) {
                 siteName = 'Custom QR Code';
             }
-            
+
             generateSingleQRCode(qrData, siteName, 'qrcode');
             document.getElementById('siteNameLabel').textContent = siteName;
             document.getElementById('qrDataDisplay').textContent = qrData;
-            
+
             // Show QR container, hide placeholder
             document.getElementById('qrPlaceholder').style.display = 'none';
             document.getElementById('qrContainer').style.display = 'block';
-            
+
             currentQRCode = qrData;
         }
 
         function generateSingleQRCode(qrData, siteName, containerId) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
-            
+
             try {
                 // Use the qrcode generator library
                 const typeNumber = 0; // Auto detect type
@@ -401,7 +365,7 @@
                 const qr = qrcode(typeNumber, errorCorrectionLevel);
                 qr.addData(qrData);
                 qr.make();
-                
+
                 // Create img tag with proper styling
                 const imgTag = qr.createImgTag(8);
                 const imgElement = document.createElement('div');
@@ -410,9 +374,9 @@
                 img.className = 'qr-code-img';
                 img.alt = `QR Code for ${siteName}`;
                 img.id = `qr-img-${qrData.replace(/[^a-zA-Z0-9]/g, '-')}`;
-                
+
                 container.appendChild(img);
-                
+
                 // Store the QR code image for batch download
                 generatedQRCodes.set(qrData, img.src);
             } catch (error) {
@@ -429,10 +393,10 @@
         function generateAllSiteQRCodes() {
             const container = document.getElementById('allQRCodes');
             container.innerHTML = '';
-            
+
             // Update site count
             document.getElementById('siteCount').textContent = `${allSites.length} sites`;
-            
+
             allSites.forEach(site => {
                 const col = document.createElement('div');
                 col.className = 'col-md-4 col-6 qr-item';
@@ -463,7 +427,7 @@
                     </div>
                 `;
                 container.appendChild(col);
-                
+
                 // Generate QR code for this site with smaller size
                 setTimeout(() => {
                     generateMiniQRCode(site.data, site.name, `qr-${site.data}`);
@@ -474,14 +438,14 @@
         function generateMiniQRCode(qrData, siteName, containerId) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
-            
+
             try {
                 const typeNumber = 0;
                 const errorCorrectionLevel = 'M';
                 const qr = qrcode(typeNumber, errorCorrectionLevel);
                 qr.addData(qrData);
                 qr.make();
-                
+
                 const imgTag = qr.createImgTag(4); // Smaller size for mini QR codes
                 const imgElement = document.createElement('div');
                 imgElement.innerHTML = imgTag;
@@ -490,9 +454,9 @@
                 img.style.height = 'auto';
                 img.alt = `QR Code for ${siteName}`;
                 img.id = `qr-mini-${qrData.replace(/[^a-zA-Z0-9]/g, '-')}`;
-                
+
                 container.appendChild(img);
-                
+
                 // Store the mini QR code image for batch download
                 generatedQRCodes.set(qrData, img.src);
             } catch (error) {
@@ -506,7 +470,7 @@
                 alert('Please generate a QR code first');
                 return;
             }
-            
+
             const qrImage = document.querySelector('#qrcode img');
             if (qrImage) {
                 downloadImage(qrImage.src, `jalscan_qr_${currentQRCode}.png`);
@@ -525,21 +489,21 @@
                 const tempContainer = document.createElement('div');
                 document.body.appendChild(tempContainer);
                 tempContainer.style.display = 'none';
-                
+
                 try {
                     const typeNumber = 0;
                     const errorCorrectionLevel = 'M';
                     const qr = qrcode(typeNumber, errorCorrectionLevel);
                     qr.addData(qrData);
                     qr.make();
-                    
+
                     const imgTag = qr.createImgTag(8);
                     tempContainer.innerHTML = imgTag;
                     const img = tempContainer.querySelector('img');
-                    
+
                     const fileName = `jalscan_qr_${siteName.replace(/\s+/g, '_')}_${qrData}.png`;
                     downloadImage(img.src, fileName);
-                    
+
                     document.body.removeChild(tempContainer);
                 } catch (error) {
                     alert('Error generating QR code for download: ' + error.message);
@@ -553,10 +517,10 @@
                 alert('No sites available to download');
                 return;
             }
-            
+
             // Create a zip file with all QR codes
             alert(`Preparing download of ${allSites.length} QR codes...\n\nThis will download each QR code individually.`);
-            
+
             // Download each QR code one by one
             allSites.forEach((site, index) => {
                 setTimeout(() => {
@@ -575,7 +539,7 @@
         }
 
         // Search functionality for sites
-        document.getElementById('siteSearch').addEventListener('input', function(e) {
+        document.getElementById('siteSearch').addEventListener('input', function (e) {
             const searchTerm = e.target.value.toLowerCase();
             document.querySelectorAll('.site-card').forEach(card => {
                 const siteName = card.dataset.name.toLowerCase();
@@ -589,7 +553,7 @@
         });
 
         // Search functionality for QR codes
-        document.getElementById('qrSearch').addEventListener('input', function(e) {
+        document.getElementById('qrSearch').addEventListener('input', function (e) {
             const searchTerm = e.target.value.toLowerCase();
             document.querySelectorAll('.qr-item').forEach(item => {
                 const siteName = item.dataset.name.toLowerCase();
@@ -604,18 +568,18 @@
         });
 
         // Enter key support for custom QR input
-        document.getElementById('customQR').addEventListener('keypress', function(e) {
+        document.getElementById('customQR').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 generateQR();
             }
         });
 
         // Site select change
-        document.getElementById('siteSelect').addEventListener('change', function() {
+        document.getElementById('siteSelect').addEventListener('change', function () {
             if (this.value) {
                 document.getElementById('customQR').value = '';
                 generateQR();
-                
+
                 // Highlight corresponding card
                 document.querySelectorAll('.site-card').forEach(card => {
                     card.classList.remove('active');
@@ -627,7 +591,7 @@
         });
 
         // Add keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
+        document.addEventListener('keydown', function (e) {
             if (e.ctrlKey && e.key === 'g') {
                 e.preventDefault();
                 generateQR();
@@ -644,4 +608,5 @@
         console.log('Ctrl+A - Download All QR Codes');
     </script>
 </body>
+
 </html>

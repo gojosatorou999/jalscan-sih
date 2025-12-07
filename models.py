@@ -21,7 +21,9 @@ ROLE_PERMISSIONS = {
         'can_manage_sites': False,
         'can_generate_reports': False,
         'can_export_data': False,
-        'can_view_tamper_detection': False
+        'can_export_data': False,
+        'can_view_tamper_detection': False,
+        'can_delete_submissions': False
     },
     'supervisor': {
         'can_capture_data': True,
@@ -35,7 +37,9 @@ ROLE_PERMISSIONS = {
         'can_manage_sites': True,
         'can_generate_reports': True,
         'can_export_data': True,
-        'can_view_tamper_detection': True
+        'can_export_data': True,
+        'can_view_tamper_detection': True,
+        'can_delete_submissions': True
     },
     'central_analyst': {
         'can_capture_data': False,
@@ -49,7 +53,9 @@ ROLE_PERMISSIONS = {
         'can_manage_sites': False,
         'can_generate_reports': True,
         'can_export_data': True,
-        'can_view_tamper_detection': True
+        'can_export_data': True,
+        'can_view_tamper_detection': True,
+        'can_delete_submissions': True
     },
     'admin': {
         'can_capture_data': True,
@@ -63,7 +69,9 @@ ROLE_PERMISSIONS = {
         'can_manage_sites': True,
         'can_generate_reports': True,
         'can_export_data': True,
-        'can_view_tamper_detection': True
+        'can_export_data': True,
+        'can_view_tamper_detection': True,
+        'can_delete_submissions': True
     }
 }
 

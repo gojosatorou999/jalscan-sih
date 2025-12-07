@@ -686,7 +686,7 @@ def create_app(config_name='default'):
             dates = sorted(list(set([row.date.strftime('%Y-%m-%d') for row in trends_data])))
             
             datasets = []
-            for site in sites[:5]:  # Limit to 5 sites for clarity
+            for site in sites:  # Show all sites
                 site_data = []
                 for date in dates:
                     matching_row = next((row for row in trends_data if row.site_name == site and row.date.strftime('%Y-%m-%d') == date), None)
@@ -1306,7 +1306,63 @@ def create_app(config_name='default'):
     @role_required(['admin', 'supervisor'])
     def qr_generator():
         """QR Code Generator for monitoring sites"""
-        return render_template('qr_generator.html')
+        sites = MonitoringSite.query.filter_by(is_active=True).all()
+        return render_template('qr_generator.html', sites=sites)
+
+    @app.route('/api/admin/add-site', methods=['POST'])
+    @login_required
+    @role_required(['admin', 'supervisor'])
+    def add_site():
+        """API to add a new monitoring site"""
+        try:
+            data = request.get_json()
+            name = data.get('name')
+            latitude = data.get('latitude')
+            longitude = data.get('longitude')
+            
+            if not all([name, latitude, longitude]):
+                return jsonify({'success': False, 'error': 'Missing required fields'}), 400
+                
+            # Auto-generate river code/QR code if not provided
+            # Format: NAME_CITY_001
+            import re
+            clean_name = re.sub(r'[^a-zA-Z0-9]', '_', name.upper())
+            district = data.get('district', 'UNKNOWN').upper()
+            state = data.get('state', '').upper()
+            
+            # Simple unique code generation
+            base_code = f"{clean_name}_{district}_001"
+            # Check for uniqueness
+            counter = 1
+            while MonitoringSite.query.filter_by(qr_code=base_code).first():
+                counter += 1
+                base_code = f"{clean_name}_{district}_{counter:03d}"
+            
+            new_site = MonitoringSite(
+                name=name,
+                latitude=float(latitude),
+                longitude=float(longitude),
+                description=data.get('description'),
+                river_basin=data.get('river_basin'),
+                district=data.get('district'),
+                state=data.get('state'),
+                qr_code=base_code,
+                river_code=base_code, # Using same for simplicity
+                created_by=current_user.id
+            )
+            
+            db.session.add(new_site)
+            db.session.commit()
+            
+            return jsonify({
+                'success': True, 
+                'message': 'Site added successfully',
+                'site': new_site.to_dict()
+            })
+            
+        except Exception as e:
+            logging.error(f"Error adding site: {e}")
+            return jsonify({'success': False, 'error': str(e)}), 500
     
     @app.route('/api/verify-location', methods=['POST'])
     @login_required
@@ -1448,27 +1504,37 @@ def create_app(config_name='default'):
             
             # Add timestamp and location overlay
             try:
-                from utils.image_processing import add_timestamp_to_image
+                from utils.image_processing import add_timestamp_to_image, analyze_water_gauge
                 add_timestamp_to_image(filepath, timestamp, latitude, longitude)
+                
+                # AI Analysis
+                ai_result = analyze_water_gauge(filepath)
+                if ai_result and ai_result.get('water_level') is not None:
+                    ai_water_level = ai_result['water_level']
+                    logging.info(f"AI Reading: {ai_water_level}m (Conf: {ai_result.get('confidence')})")
+                    
+                    diff = abs(ai_water_level - water_level)
+                    if diff > 0.5:
+                        logging.warning(f"Significant discrepancy! AI: {ai_water_level}, Manual: {water_level}")
+                else:
+                    logging.info("AI could not read the gauge.")
+                    
             except Exception as e:
-                logging.warning(f"Could not add timestamp to image: {e}")
+                logging.error(f"Error in image processing: {e}")
                 # Continue even if timestamp overlay fails
             
             # Create submission record
             submission = WaterLevelSubmission(
-                user_id=current_user.id,
                 site_id=site_id,
+                user_id=current_user.id,
                 water_level=water_level,
-                timestamp=timestamp,
+                photo_filename=filename,  # Store just the filename
+                notes=notes,
                 gps_latitude=latitude,
                 gps_longitude=longitude,
-                photo_filename=filename,
-                location_verified=True,
                 verification_method=verification_method,
                 qr_code_scanned=qr_code_scanned,
-                notes=notes,
-                quality_rating=quality_rating,
-                sync_status='pending'
+                quality_rating=quality_rating
             )
             
             db.session.add(submission)
@@ -1490,25 +1556,124 @@ def create_app(config_name='default'):
                     logging.warning(f"⚠️ New submission {submission.id} will be synced in background")
             except Exception as sync_error:
                 logging.warning(f"Immediate sync failed: {sync_error}")
+
+            # Check for flood conditions
+            whatsapp_service.check_flood_conditions(submission)
             
-            # Check for flood conditions and send alerts
-            try:
-                whatsapp_service.check_flood_conditions(submission)
-            except Exception as e:
-                logging.error(f"Error checking flood conditions: {e}")
-            
-            return jsonify({
-                'success': True,
-                'submission_id': submission.id,
-                'message': 'Reading submitted successfully'
-            })
+            return jsonify({'success': True, 'message': 'Reading submitted successfully', 'id': submission.id}), 201
             
         except ValueError as e:
             logging.error(f"Value error in submit_reading: {e}")
             return jsonify({'error': 'Invalid data format'}), 400
         except Exception as e:
             logging.error(f"Error submitting reading: {e}")
-            return jsonify({'error': 'Failed to submit reading'}), 500
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/analyze-image', methods=['POST'])
+    @login_required
+    def analyze_image():
+        """Endpoint to analyze an image before submission"""
+        try:
+            if 'photo' not in request.files:
+                return jsonify({'error': 'No photo provided'}), 400
+                
+            photo = request.files['photo']
+            if photo.filename == '':
+                return jsonify({'error': 'No photo selected'}), 400
+                
+            # Save temporarily
+            filename = f"temp_{current_user.id}_{int(time.time())}.jpg"
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            photo.save(filepath)
+            
+            try:
+                from utils.image_processing import analyze_water_gauge
+                result = analyze_water_gauge(filepath)
+                
+                # Clean up temp file
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                    
+                if result:
+                    return jsonify(result)
+                else:
+                    return jsonify({'error': 'AI analysis failed'}), 500
+                    
+            except Exception as e:
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                raise e
+        except Exception as e:
+            logging.error(f"Error analyzing image: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    @app.route('/api/analyze-gauge', methods=['POST'])
+    @login_required
+    def analyze_gauge():
+        """Endpoint to analyze a gauge image from base64 data (used by capture page)"""
+        try:
+            data = request.get_json()
+            if not data or 'image_data' not in data:
+                return jsonify({'success': False, 'error': 'No image data provided'}), 400
+            
+            image_data = data['image_data']
+            
+            # Handle base64 data URL
+            if ',' in image_data:
+                image_data = image_data.split(',')[1]
+            
+            # Decode base64 to bytes
+            import base64
+            image_bytes = base64.b64decode(image_data)
+            
+            # Save temporarily
+            filename = f"temp_gauge_{current_user.id}_{int(time.time())}.jpg"
+            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+            
+            with open(filepath, 'wb') as f:
+                f.write(image_bytes)
+            
+            try:
+                from utils.image_processing import analyze_water_gauge
+                result = analyze_water_gauge(filepath)
+                
+                # Clean up temp file
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                
+                if result:
+                    return jsonify({
+                        'success': True,
+                        'water_level': result.get('water_level'),
+                        'confidence': result.get('confidence', 0),
+                        'is_valid': result.get('is_valid', False),
+                        'message': result.get('reason', '')
+                    })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'AI analysis failed',
+                        'water_level': None,
+                        'confidence': 0,
+                        'is_valid': False
+                    })
+                    
+            except Exception as e:
+                logging.error(f"Error in gauge analysis: {e}")
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                return jsonify({
+                    'success': False,
+                    'error': str(e),
+                    'water_level': None,
+                    'confidence': 0,
+                    'is_valid': False
+                })
+                
+        except Exception as e:
+            logging.error(f"Error analyzing gauge: {e}")
+            return jsonify({'success': False, 'error': str(e)}), 500
+
     
     @app.route('/uploads/<filename>')
     @login_required
@@ -1987,7 +2152,32 @@ def create_app(config_name='default'):
             logging.error(f"Error reviewing tamper detection: {e}")
             return jsonify({'success': False, 'error': str(e)})
 
-    @app.route('/api/tamper-detection/agent-behavior/<int:agent_id>')
+    @app.route('/api/delete-submission/<int:submission_id>', methods=['DELETE', 'POST'])
+    @login_required
+    def delete_submission(submission_id):
+        """Delete a submission"""
+        try:
+            submission = WaterLevelSubmission.query.get_or_404(submission_id)
+            
+            # Check permission: User must own it OR be an admin/supervisor
+            # Ensure safe integer comparison
+            if int(submission.user_id) != int(current_user.id) and not current_user.has_permission('can_delete_submissions'):
+                return jsonify({'success': False, 'error': 'Permission denied'}), 403
+            
+            # Optional: Delete the image file
+            # image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], submission.photo_filename)
+            # if os.path.exists(image_path):
+            #     os.remove(image_path)
+            
+            db.session.delete(submission)
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': 'Submission deleted successfully'})
+            
+        except Exception as e:
+            logging.error(f"Error deleting submission {submission_id}: {e}")
+            db.session.rollback()
+            return jsonify({'success': False, 'error': str(e)}), 500
     @login_required
     @role_required(['supervisor', 'admin', 'central_analyst'])
     def get_agent_behavior(agent_id):

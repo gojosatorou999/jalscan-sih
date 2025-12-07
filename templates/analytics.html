@@ -131,7 +131,8 @@
                                 </td>
                                 <td>
                                     <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar bg-success" style="width: {{ site.quality_score or 0 }}%"></div>
+                                        <div class="progress-bar bg-success"
+                                            style="width: {{ site.quality_score or 0 }}%"></div>
                                     </div>
                                     <small class="text-muted">{{ site.quality_score or 0 }}% Quality</small>
                                 </td>
@@ -179,7 +180,8 @@
                                 {% if submission.quality_rating %}
                                 <div class="mt-1">
                                     {% for i in range(5) %}
-                                    <i class="bi bi-star{{ '-fill' if i < submission.quality_rating else '' }} text-warning" style="font-size: 0.7rem;"></i>
+                                    <i class="bi bi-star{{ '-fill' if i < submission.quality_rating else '' }} text-warning"
+                                        style="font-size: 0.7rem;"></i>
                                     {% endfor %}
                                 </div>
                                 {% endif %}
@@ -242,240 +244,273 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Chart instances
-let submissionsChart = null;
-let qualityChart = null;
+    // Chart instances
+    let submissionsChart = null;
+    let qualityChart = null;
 
-// Load all charts
-async function loadAllCharts() {
-    await loadSubmissionsChart();
-    await loadQualityChart();
-}
+    // Load all charts
+    async function loadAllCharts() {
+        await loadSubmissionsChart();
+        await loadQualityChart();
+    }
 
-// Load submissions chart
-async function loadSubmissionsChart() {
-    try {
-        const response = await fetch('/api/analytics/submissions-by-date');
-        const data = await response.json();
-        
-        const ctx = document.createElement('canvas');
-        document.getElementById('submissionsChart').innerHTML = '';
-        document.getElementById('submissionsChart').appendChild(ctx);
-        
-        submissionsChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Submissions',
-                    data: data.data,
-                    backgroundColor: 'rgba(13, 110, 253, 0.8)',
-                    borderColor: 'rgba(13, 110, 253, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
+    // Load submissions chart
+    async function loadSubmissionsChart() {
+        try {
+            const response = await fetch('/api/analytics/submissions-by-date');
+            const data = await response.json();
+
+            console.log('Submissions data:', data);
+
+            // Check if we have data
+            if (!data.labels || data.labels.length === 0) {
+                document.getElementById('submissionsChart').innerHTML =
+                    '<div class="alert alert-info text-center">No submission data available for the selected period.</div>';
+                return;
+            }
+
+            const ctx = document.createElement('canvas');
+            document.getElementById('submissionsChart').innerHTML = '';
+            document.getElementById('submissionsChart').appendChild(ctx);
+
+            submissionsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Submissions',
+                        data: data.data,
+                        backgroundColor: 'rgba(13, 110, 253, 0.8)',
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        borderWidth: 2,
+                        borderRadius: 5,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
                             display: true,
-                            text: 'Number of Submissions'
+                            position: 'top'
+                        },
+                        tooltip: {
+                            enabled: true,
+                            callbacks: {
+                                label: function (context) {
+                                    return 'Submissions: ' + context.parsed.y;
+                                }
+                            }
                         }
                     },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0
+                            },
+                            title: {
+                                display: true,
+                                text: 'Number of Submissions',
+                                font: { weight: 'bold' }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                font: { weight: 'bold' }
+                            }
                         }
                     }
                 }
-            }
-        });
-    } catch (error) {
-        console.error('Error loading submissions chart:', error);
-        document.getElementById('submissionsChart').innerHTML = 
-            '<div class="alert alert-warning">Submissions data not available</div>';
-    }
-}
-
-// Load quality chart
-async function loadQualityChart() {
-    try {
-        // Generate quality data from recent submissions
-        const qualityData = [0, 0, 0, 0, 0]; // 1-5 stars
-        
-        {% for submission in recent_submissions %}
-        {% if submission.quality_rating %}
-        if ({{ submission.quality_rating }} >= 1 && {{ submission.quality_rating }} <= 5) {
-            qualityData[{{ submission.quality_rating }} - 1]++;
+            });
+        } catch (error) {
+            console.error('Error loading submissions chart:', error);
+            document.getElementById('submissionsChart').innerHTML =
+                '<div class="alert alert-warning">Error loading submissions data: ' + error.message + '</div>';
         }
-        {% endif %}
-        {% endfor %}
-        
-        const ctx = document.getElementById('qualityChartCanvas');
-        qualityChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['★', '★★', '★★★', '★★★★', '★★★★★'],
-                datasets: [{
-                    label: 'Submissions',
-                    data: qualityData,
-                    backgroundColor: [
-                        '#dc3545', '#fd7e14', '#ffc107', '#20c997', '#198754'
-                    ]
-                }]
+    }
+
+    // Load quality chart
+    async function loadQualityChart() {
+        try {
+            // Generate quality data from recent submissions
+            const qualityData = [0, 0, 0, 0, 0]; // 1-5 stars
+
+            {% for submission in recent_submissions %}
+            {% if submission.quality_rating %}
+            if ({{ submission.quality_rating }} >= 1 && {{ submission.quality_rating }} <= 5) {
+                qualityData[{{ submission.quality_rating }} - 1]++;
+            }
+    {% endif %}
+    {% endfor %}
+
+    const ctx = document.getElementById('qualityChartCanvas');
+    qualityChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['★', '★★', '★★★', '★★★★', '★★★★★'],
+            datasets: [{
+                label: 'Submissions',
+                data: qualityData,
+                backgroundColor: [
+                    '#dc3545', '#fd7e14', '#ffc107', '#20c997', '#198754'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
-        });
+        }
+    });
     } catch (error) {
         console.error('Error loading quality chart:', error);
-        document.getElementById('qualityChart').innerHTML = 
+        document.getElementById('qualityChart').innerHTML =
             '<div class="alert alert-warning">Quality data not available</div>';
     }
 }
 
-// Export data function
-async function exportData(format) {
-    try {
-        const response = await fetch('/api/export/submissions');
-        
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `submissions_export_${new Date().toISOString().split('T')[0]}.${format}`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            showAlert(`${format.toUpperCase()} exported successfully!`, 'success');
-        } else {
-            throw new Error('Export failed');
+    // Export data function
+    async function exportData(format) {
+        try {
+            const response = await fetch('/api/export/submissions');
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `submissions_export_${new Date().toISOString().split('T')[0]}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showAlert(`${format.toUpperCase()} exported successfully!`, 'success');
+            } else {
+                throw new Error('Export failed');
+            }
+        } catch (error) {
+            console.error('Export error:', error);
+            showAlert('Export failed: ' + error.message, 'danger');
         }
-    } catch (error) {
-        console.error('Export error:', error);
-        showAlert('Export failed: ' + error.message, 'danger');
     }
-}
 
-// Generate PDF report
-async function generatePDF() {
-    try {
-        showAlert('Generating PDF report...', 'info');
-        
-        // Create a simple PDF using window.print() for now
-        window.print();
-        
-    } catch (error) {
-        console.error('PDF generation error:', error);
-        showAlert('PDF generation failed: ' + error.message, 'danger');
+    // Generate PDF report
+    async function generatePDF() {
+        try {
+            showAlert('Generating PDF report...', 'info');
+
+            // Create a simple PDF using window.print() for now
+            window.print();
+
+        } catch (error) {
+            console.error('PDF generation error:', error);
+            showAlert('PDF generation failed: ' + error.message, 'danger');
+        }
     }
-}
 
-// Download chart as image
-function downloadChart(chartId) {
-    const canvas = document.querySelector(`#${chartId} canvas`);
-    if (canvas) {
-        const link = document.createElement('a');
-        link.download = `${chartId}_${new Date().toISOString().split('T')[0]}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
+    // Download chart as image
+    function downloadChart(chartId) {
+        const canvas = document.querySelector(`#${chartId} canvas`);
+        if (canvas) {
+            const link = document.createElement('a');
+            link.download = `${chartId}_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
     }
-}
 
-function showAlert(message, type) {
-    // Remove existing alerts
-    const existingAlerts = document.querySelectorAll('.alert');
-    existingAlerts.forEach(alert => alert.remove());
-    
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
-    alertDiv.innerHTML = `
+    function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
+        alertDiv.innerHTML = `
         ${message}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
-    document.querySelector('.container.mt-4').insertBefore(alertDiv, document.querySelector('.container.mt-4').firstChild);
-    
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 5000);
-}
 
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-    loadAllCharts();
-});
+        document.querySelector('.container.mt-4').insertBefore(alertDiv, document.querySelector('.container.mt-4').firstChild);
+
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function () {
+        loadAllCharts();
+    });
 </script>
 
 <style>
-.card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    border: 1px solid rgba(0, 0, 0, 0.125);
-}
-
-.card-title {
-    font-weight: 600;
-}
-
-.progress {
-    background-color: #e9ecef;
-}
-
-.list-group-item {
-    border: none;
-    padding: 0.75rem 0;
-}
-
-.badge {
-    font-size: 0.75em;
-}
-
-@media (max-width: 768px) {
-    .col-6 {
-        margin-bottom: 1rem;
-    }
-    
-    .card-body {
-        padding: 1rem;
-    }
-}
-
-/* Print styles for PDF */
-@media print {
-    .btn, .badge.bg-info {
-        display: none !important;
-    }
-    
     .card {
-        border: 1px solid #000 !important;
-        break-inside: avoid;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
     }
-    
-    .container {
-        max-width: 100% !important;
+
+    .card-title {
+        font-weight: 600;
     }
-}
+
+    .progress {
+        background-color: #e9ecef;
+    }
+
+    .list-group-item {
+        border: none;
+        padding: 0.75rem 0;
+    }
+
+    .badge {
+        font-size: 0.75em;
+    }
+
+    @media (max-width: 768px) {
+        .col-6 {
+            margin-bottom: 1rem;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+    }
+
+    /* Print styles for PDF */
+    @media print {
+
+        .btn,
+        .badge.bg-info {
+            display: none !important;
+        }
+
+        .card {
+            border: 1px solid #000 !important;
+            break-inside: avoid;
+        }
+
+        .container {
+            max-width: 100% !important;
+        }
+    }
 </style>
 {% endblock %}

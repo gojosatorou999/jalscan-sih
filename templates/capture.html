@@ -20,13 +20,15 @@
                     <div class="row">
                         <div class="col-md-6">
                             <p><strong>Site Coordinates:</strong><br>
-                            {{ "%.6f"|format(site.latitude) }}, {{ "%.6f"|format(site.longitude) }}</p>
+                                {{ "%.6f"|format(site.latitude) }}, {{ "%.6f"|format(site.longitude) }}</p>
                             <p><strong>Site QR Code:</strong><br>
-                            <code>{{ site.qr_code }}</code></p>
+                                <code>{{ site.qr_code }}</code>
+                            </p>
                         </div>
                         <div class="col-md-6">
                             <p><strong>Your Coordinates:</strong><br>
-                            <span id="user-coords">Waiting for GPS...</span></p>
+                                <span id="user-coords">Waiting for GPS...</span>
+                            </p>
                         </div>
                     </div>
                     <div class="mt-2">
@@ -38,7 +40,8 @@
                 <div class="mb-4" id="qr-section">
                     <h5>QR Code Validation <small class="text-muted">(Alternative to GPS)</small></h5>
                     <div class="alert alert-info">
-                        <small>If GPS is unavailable or inaccurate, scan the QR code installed at the monitoring site.</small>
+                        <small>If GPS is unavailable or inaccurate, scan the QR code installed at the monitoring
+                            site.</small>
                     </div>
                     <div class="d-grid gap-2">
                         <button id="scan-qr-btn" class="btn btn-outline-primary">
@@ -46,7 +49,8 @@
                         </button>
                     </div>
                     <div id="qr-scanner" style="display: none;" class="mt-3">
-                        <div id="qr-reader" style="width: 100%; height: 300px; border: 2px dashed #ccc; background: #f8f9fa;"></div>
+                        <div id="qr-reader"
+                            style="width: 100%; height: 300px; border: 2px dashed #ccc; background: #f8f9fa;"></div>
                         <div class="mt-2 text-center">
                             <small class="text-muted">Point your camera at the QR code</small>
                         </div>
@@ -57,7 +61,7 @@
                         </div>
                     </div>
                     <div id="qr-result" class="alert mt-2" style="display: none;"></div>
-                    
+
                     <!-- Manual QR Code Entry Fallback -->
                     <div id="manual-qr-entry" class="mt-3" style="display: none;">
                         <div class="alert alert-warning">
@@ -65,8 +69,8 @@
                         </div>
                         <div class="mb-3">
                             <label for="manual-qr-input" class="form-label">Enter QR Code:</label>
-                            <input type="text" class="form-control" id="manual-qr-input" 
-                                   placeholder="Enter the QR code from the site (e.g., {{ site.qr_code }})">
+                            <input type="text" class="form-control" id="manual-qr-input"
+                                placeholder="Enter the QR code from the site (e.g., {{ site.qr_code }})">
                         </div>
                         <button id="submit-manual-qr" class="btn btn-primary btn-sm">
                             <i class="bi bi-check-circle"></i> Verify QR Code
@@ -87,7 +91,8 @@
                     <h5>Photo Capture</h5>
                     <div class="mb-3">
                         <div id="camera-container">
-                            <video id="video" width="100%" height="300" style="border: 1px solid #ccc; display: none; background: black;"></video>
+                            <video id="video" width="100%" height="300"
+                                style="border: 1px solid #ccc; display: none; background: black;"></video>
                             <div id="camera-error" class="alert alert-danger" style="display: none;">
                                 <strong>Camera Error:</strong> <span id="error-message"></span>
                             </div>
@@ -119,16 +124,13 @@
                 <!-- Water Level Input Section -->
                 <div class="mb-4" id="input-section">
                     <h5>Water Level Measurement</h5>
-                    
-                    <!-- Gauge Scanning Option -->
+
                     <div class="mb-3">
                         <label class="form-label">Water Level Input Method</label>
-                        <div class="d-grid gap-2">
-                            <button type="button" id="scan-gauge-btn" class="btn btn-outline-primary">
-                                <i class="bi bi-camera-text"></i> Scan from Gauge
-                            </button>
-                            <small class="text-muted text-center">Or enter manually below</small>
-                        </div>
+                        <button type="button" id="scan-gauge-btn" class="btn btn-outline-primary w-100 mb-2">
+                            Scan from Gauge
+                        </button>
+                        <div class="text-center text-muted small mb-2">Or enter manually below</div>
                     </div>
 
                     <form id="reading-form">
@@ -137,14 +139,34 @@
                         <input type="hidden" id="longitude" name="longitude">
                         <input type="hidden" id="verification_method" name="verification_method" value="gps">
                         <input type="hidden" id="qr_code_scanned" name="qr_code_scanned">
-                        
-                        <div class="mb-3">
-                            <label for="water_level" class="form-label">Water Level (meters)</label>
-                            <input type="number" step="0.01" min="0" max="50" class="form-control" id="water_level" name="water_level" 
-                                   placeholder="Enter water level in meters (e.g., 4.25)" required>
-                            <div class="form-text">Enter the water level measurement in meters.</div>
+
+                        <!-- AI Analysis Result -->
+                        <div id="ai-analysis-card" class="card mb-3 d-none">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="bi bi-robot"></i> AI Analysis</h5>
+                                <div id="ai-loading" class="d-none">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <span class="ms-2">Analyzing image...</span>
+                                </div>
+                                <div id="ai-result" class="d-none">
+                                    <p class="mb-1"><strong>Water Level:</strong> <span id="ai-water-level"
+                                            class="text-primary fw-bold">--</span></p>
+                                    <p class="mb-1"><strong>Confidence:</strong> <span id="ai-confidence">--</span></p>
+                                    <p class="mb-0"><strong>Status:</strong> <span id="ai-status">--</span></p>
+                                    <p id="ai-reason" class="text-muted small mt-1 mb-0"></p>
+                                </div>
+                            </div>
                         </div>
-                        
+
+                        <div id="manual-input-container" class="mb-3">
+                            <label for="water_level" class="form-label">Water Level (meters)</label>
+                            <input type="number" step="0.01" class="form-control" id="water_level" name="water_level"
+                                required>
+                            <div class="form-text">Enter the reading visible on the gauge. Verify the AI reading.</div>
+                        </div>
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success" id="submit-btn" disabled>
                                 <i class="bi bi-check-circle"></i> Submit Reading
@@ -166,56 +188,54 @@
             </div>
         </div>
     </div>
-</div>
+    <!-- Gauge Scan Modal -->
+    <div class="modal fade" id="gaugeScanModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-robot"></i> AI Gauge Scanner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <small>Point camera at the water gauge. Ensure numbers are clearly visible.</small>
+                    </div>
 
-<!-- Gauge Scan Modal -->
-<div class="modal fade" id="gaugeScanModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-camera-text"></i> Scan Water Level from Gauge
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <small>
-                        <i class="bi bi-info-circle"></i> 
-                        Point your camera at the water level gauge. Ensure the numbers are clear and well-lit.
-                    </small>
-                </div>
-                
-                <div id="gauge-scan-container" class="text-center">
-                    <video id="gauge-scan-video" width="100%" height="300" style="border: 1px solid #ccc; display: none; background: black;"></video>
-                    <canvas id="gauge-scan-canvas" style="display: none;"></canvas>
-                    <div id="gauge-scan-preview" class="mt-3"></div>
-                </div>
-                
-                <div class="text-center mt-3">
-                    <button id="start-gauge-scan" class="btn btn-primary">
-                        <i class="bi bi-camera"></i> Start Gauge Scanner
-                    </button>
-                    <button id="capture-gauge-btn" class="btn btn-success" style="display: none;">
-                        <i class="bi bi-camera-fill"></i> Capture Gauge Image
-                    </button>
-                    <button id="retry-gauge-scan" class="btn btn-warning" style="display: none;">
-                        <i class="bi bi-arrow-repeat"></i> Try Again
-                    </button>
-                </div>
-                
-                <div id="gauge-scan-result" class="alert alert-info mt-3" style="display: none;">
-                    <div class="d-flex align-items-center">
-                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                        <span>Processing gauge image...</span>
+                    <div id="gauge-camera-container" class="mb-3 position-relative">
+                        <video id="gauge-video" width="100%" height="400"
+                            style="background: black; border-radius: 8px; object-fit: cover;"></video>
+                        <canvas id="gauge-canvas" style="display: none;"></canvas>
+
+                        <!-- Scanning Overlay -->
+                        <div id="gauge-overlay"
+                            class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center pointer-events-none"
+                            style="border: 2px solid rgba(0,255,0,0.5); border-radius: 8px;">
+                            <div class="text-white bg-dark bg-opacity-50 px-3 py-1 rounded">
+                                Align Gauge Here
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="gauge-loading" class="text-center d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Analyzing gauge with Gemini AI...</p>
+                    </div>
+
+                    <div id="gauge-result" class="d-none">
+                        <!-- Results injected here -->
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button id="use-scanned-level" class="btn btn-success" style="display: none;">
-                    <i class="bi bi-check-circle"></i> Use This Reading
-                </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="capture-gauge-btn" class="btn btn-primary">
+                        <i class="bi bi-camera"></i> Capture & Analyze
+                    </button>
+                    <button type="button" id="use-gauge-value-btn" class="btn btn-success d-none">
+                        <i class="bi bi-check-lg"></i> Use This Reading
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -226,750 +246,775 @@
 <!-- QR Code Scanner Library -->
 <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
-<!-- Tesseract.js for OCR -->
-<script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+
 
 <!-- Fallback CDN for QR Scanner -->
 <script>
-if (typeof Html5Qrcode === 'undefined') {
-    console.log('Primary QR CDN failed, loading fallback...');
-    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"><\/script>');
-}
+    if (typeof Html5Qrcode === 'undefined') {
+        console.log('Primary QR CDN failed, loading fallback...');
+        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"><\/script>');
+    }
 </script>
 
 <script>
-let stream = null;
-let gaugeStream = null;
-let capturedPhoto = null;
-let currentCamera = 'environment';
-let qrScanner = null;
-let locationVerified = false;
-let verificationMethod = 'gps';
+    let stream = null;
+    let gaugeStream = null;
+    let capturedPhoto = null;
+    let currentCamera = 'environment';
+    let qrScanner = null;
+    let locationVerified = false;
+    let verificationMethod = 'gps';
 
-// Debug function
-function debugLog(message) {
-    console.log(message);
-    const debugDiv = document.getElementById('debug-info');
-    const debugContent = document.getElementById('debug-content');
-    if (debugDiv && debugContent) {
-        debugDiv.style.display = 'block';
-        debugContent.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+    // Debug function
+    function debugLog(message) {
+        console.log(message);
+        const debugDiv = document.getElementById('debug-info');
+        const debugContent = document.getElementById('debug-content');
+        if (debugDiv && debugContent) {
+            debugDiv.style.display = 'block';
+            debugContent.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+        }
     }
-}
 
-// Check if QR scanner is available
-function isQRScannerAvailable() {
-    return typeof Html5Qrcode !== 'undefined' && window.Html5Qrcode;
-}
-
-// Camera functions (existing)
-function showCameraError(message) {
-    const errorDiv = document.getElementById('camera-error');
-    const errorMessage = document.getElementById('error-message');
-    errorMessage.textContent = message;
-    errorDiv.style.display = 'block';
-    document.getElementById('video').style.display = 'none';
-}
-
-function hideCameraError() {
-    document.getElementById('camera-error').style.display = 'none';
-}
-
-function stopCameraStream() {
-    if (stream) {
-        debugLog('Stopping camera stream');
-        stream.getTracks().forEach(track => {
-            track.stop();
-        });
-        stream = null;
+    // Check if QR scanner is available
+    function isQRScannerAvailable() {
+        return typeof Html5Qrcode !== 'undefined' && window.Html5Qrcode;
     }
-}
 
-async function initCamera(facingMode = 'environment') {
-    try {
-        debugLog('Initializing camera with facingMode: ' + facingMode);
-        stopCameraStream();
-        
-        const constraints = {
-            video: { 
-                facingMode: facingMode,
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            } 
-        };
-        
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        const video = document.getElementById('video');
-        
-        video.srcObject = stream;
-        video.style.display = 'block';
-        hideCameraError();
-        
-        await new Promise((resolve) => {
-            video.onloadedmetadata = () => {
-                video.play();
-                resolve();
+    // Camera functions (existing)
+    function showCameraError(message) {
+        const errorDiv = document.getElementById('camera-error');
+        const errorMessage = document.getElementById('error-message');
+        errorMessage.textContent = message;
+        errorDiv.style.display = 'block';
+        document.getElementById('video').style.display = 'none';
+    }
+
+    function hideCameraError() {
+        document.getElementById('camera-error').style.display = 'none';
+    }
+
+    function stopCameraStream() {
+        if (stream) {
+            debugLog('Stopping camera stream');
+            stream.getTracks().forEach(track => {
+                track.stop();
+            });
+            stream = null;
+        }
+    }
+
+    async function initCamera(facingMode = 'environment') {
+        try {
+            debugLog('Initializing camera with facingMode: ' + facingMode);
+            stopCameraStream();
+
+            const constraints = {
+                video: {
+                    facingMode: facingMode,
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
             };
-        });
-        
-        debugLog('Camera initialized successfully');
-        currentCamera = facingMode;
-        
+
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            const video = document.getElementById('video');
+
+            video.srcObject = stream;
+            video.style.display = 'block';
+            hideCameraError();
+
+            await new Promise((resolve) => {
+                video.onloadedmetadata = () => {
+                    video.play();
+                    resolve();
+                };
+            });
+
+            debugLog('Camera initialized successfully');
+            currentCamera = facingMode;
+
+            document.getElementById('capture-btn').style.display = 'block';
+            document.getElementById('switch-camera-btn').style.display = 'block';
+            document.getElementById('start-camera-btn').style.display = 'none';
+
+        } catch (err) {
+            debugLog('Camera error: ' + err.message);
+
+            if (facingMode === 'environment') {
+                showCameraError('Back camera not available. Trying front camera...');
+                setTimeout(() => initCamera('user'), 1000);
+            } else {
+                showCameraError('Cannot access camera: ' + err.message +
+                    '. Please ensure camera permissions are granted and try again.');
+            }
+        }
+    }
+
+    function switchCamera() {
+        const newMode = currentCamera === 'environment' ? 'user' : 'environment';
+        debugLog('Switching camera to: ' + newMode);
+        initCamera(newMode);
+    }
+
+    function capturePhoto() {
+        debugLog('Capturing photo...');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
+        debugLog('Photo captured, size: ' + capturedPhoto.length + ' bytes');
+
+        document.getElementById('preview-img').src = capturedPhoto;
+        document.getElementById('photo-preview').style.display = 'block';
+        document.getElementById('capture-btn').style.display = 'none';
+        document.getElementById('retake-btn').style.display = 'block';
+        document.getElementById('switch-camera-btn').style.display = 'none';
+
+        stopCameraStream();
+        document.getElementById('video').style.display = 'none';
+
+        // Trigger AI analysis removed - strictly for site proof now
+
+        const waterLevel = document.getElementById('water_level').value;
+        if (waterLevel && locationVerified) {
+            document.getElementById('submit-btn').disabled = false;
+        }
+    }
+
+    function retakePhoto() {
+        debugLog('Retaking photo...');
+        capturedPhoto = null;
+        document.getElementById('photo-preview').style.display = 'none';
         document.getElementById('capture-btn').style.display = 'block';
+        document.getElementById('retake-btn').style.display = 'none';
         document.getElementById('switch-camera-btn').style.display = 'block';
-        document.getElementById('start-camera-btn').style.display = 'none';
-        
-    } catch (err) {
-        debugLog('Camera error: ' + err.message);
-        
-        if (facingMode === 'environment') {
-            showCameraError('Back camera not available. Trying front camera...');
-            setTimeout(() => initCamera('user'), 1000);
-        } else {
-            showCameraError('Cannot access camera: ' + err.message + 
-                          '. Please ensure camera permissions are granted and try again.');
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('ai-analysis-card').classList.add('d-none'); // Hide AI card on retake
+        document.getElementById('ai-analysis-card').classList.add('d-none'); // Hide AI card on retake
+        initCamera(currentCamera);
+    }
+
+    // AI Analysis Function
+    async function analyzeCapturedPhoto(photoDataUrl) {
+        const aiAnalysisCard = document.getElementById('ai-analysis-card');
+        const aiLoading = document.getElementById('ai-loading');
+        const aiResult = document.getElementById('ai-result');
+        const waterLevelInput = document.getElementById('water_level');
+        const manualInputContainer = document.getElementById('manual-input-container');
+
+        aiAnalysisCard.classList.remove('d-none');
+        aiLoading.classList.remove('d-none');
+        aiResult.classList.add('d-none');
+        document.getElementById('ai-water-level').textContent = '--';
+        document.getElementById('ai-confidence').textContent = '--';
+        document.getElementById('ai-status').textContent = '--';
+        document.getElementById('ai-reason').textContent = '';
+
+        try {
+            debugLog('Sending photo for AI analysis...');
+            const response = await fetch('/api/analyze-gauge', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image_data: photoDataUrl })
+            });
+
+            const data = await response.json();
+            debugLog('AI analysis response: ' + JSON.stringify(data));
+
+            aiLoading.classList.add('d-none');
+            aiResult.classList.remove('d-none');
+            manualInputContainer.classList.remove('d-none'); // Reveal input after analysis attempt
+
+            if (data.success) {
+                document.getElementById('ai-status').innerHTML = '<span class="text-success">Analysis successful</span>';
+                document.getElementById('ai-reason').textContent = data.message || '';
+
+                if (data.water_level !== null) {
+                    document.getElementById('ai-water-level').textContent = `${data.water_level} m`;
+                    document.getElementById('ai-confidence').textContent = `${(data.confidence * 100).toFixed(1)}%`;
+
+                    // Auto-fill and highlight
+                    waterLevelInput.value = data.water_level;
+                    waterLevelInput.classList.add('is-valid');
+                    setTimeout(() => waterLevelInput.classList.remove('is-valid'), 2000);
+                } else {
+                    document.getElementById('ai-water-level').textContent = 'Not detected';
+                    document.getElementById('ai-confidence').textContent = 'N/A';
+                    document.getElementById('ai-status').innerHTML = '<span class="text-warning">No water level detected</span>';
+                    document.getElementById('ai-reason').textContent = data.message || 'Please enter manually.';
+                }
+            } else {
+                document.getElementById('ai-status').innerHTML = '<span class="text-danger">Analysis failed</span>';
+                document.getElementById('ai-reason').textContent = data.error || 'An error occurred during analysis. Please enter manually.';
+                document.getElementById('ai-water-level').textContent = 'Error';
+                document.getElementById('ai-confidence').textContent = 'N/A';
+            }
+
+            // Check if submit button can be enabled
+            if (waterLevelInput.value && capturedPhoto && locationVerified) {
+                document.getElementById('submit-btn').disabled = false;
+            }
+
+        } catch (error) {
+            console.error('Error analyzing image:', error);
+            aiLoading.classList.add('d-none');
+            aiResult.classList.remove('d-none');
+            document.getElementById('ai-status').innerHTML = '<span class="text-danger">Analysis failed</span>';
+            document.getElementById('ai-reason').textContent = 'Network error or server issue. Please enter manually.';
+            document.getElementById('ai-water-level').textContent = 'Error';
+            document.getElementById('ai-confidence').textContent = 'N/A';
+            manualInputContainer.classList.remove('d-none'); // Reveal input on error so user can still submit
         }
     }
-}
 
-function switchCamera() {
-    const newMode = currentCamera === 'environment' ? 'user' : 'environment';
-    debugLog('Switching camera to: ' + newMode);
-    initCamera(newMode);
-}
+    // QR Code Scanner Functions (existing)
+    async function startQRScanner() {
+        try {
+            if (!isQRScannerAvailable()) {
+                throw new Error('QR Scanner library not loaded. Please check your internet connection.');
+            }
 
-function capturePhoto() {
-    debugLog('Capturing photo...');
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    const context = canvas.getContext('2d');
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
-    debugLog('Photo captured, size: ' + capturedPhoto.length + ' bytes');
-    
-    document.getElementById('preview-img').src = capturedPhoto;
-    document.getElementById('photo-preview').style.display = 'block';
-    document.getElementById('capture-btn').style.display = 'none';
-    document.getElementById('retake-btn').style.display = 'block';
-    document.getElementById('switch-camera-btn').style.display = 'none';
-    
-    stopCameraStream();
-    document.getElementById('video').style.display = 'none';
-    
-    const waterLevel = document.getElementById('water_level').value;
-    if (waterLevel) {
-        document.getElementById('submit-btn').disabled = false;
-    }
-}
+            document.getElementById('scan-qr-btn').style.display = 'none';
+            document.getElementById('qr-scanner').style.display = 'block';
+            document.getElementById('qr-result').style.display = 'none';
+            document.getElementById('manual-qr-entry').style.display = 'none';
 
-function retakePhoto() {
-    debugLog('Retaking photo...');
-    capturedPhoto = null;
-    document.getElementById('photo-preview').style.display = 'none';
-    document.getElementById('capture-btn').style.display = 'block';
-    document.getElementById('retake-btn').style.display = 'none';
-    document.getElementById('switch-camera-btn').style.display = 'block';
-    document.getElementById('submit-btn').disabled = true;
-    initCamera(currentCamera);
-}
+            qrScanner = new Html5Qrcode("qr-reader");
 
-// Gauge Scanning Functions
-async function startGaugeScanner() {
-    try {
-        debugLog('Starting gauge scanner...');
-        const modal = new bootstrap.Modal(document.getElementById('gaugeScanModal'));
-        modal.show();
-        
-        // Initialize camera for gauge scanning
-        gaugeStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            } 
-        });
-        
-        const video = document.getElementById('gauge-scan-video');
-        video.srcObject = gaugeStream;
-        video.style.display = 'block';
-        
-        await video.play();
-        
-        document.getElementById('start-gauge-scan').style.display = 'none';
-        document.getElementById('capture-gauge-btn').style.display = 'block';
-        
-    } catch (error) {
-        console.error('Gauge scanner error:', error);
-        showGlobalAlert('Cannot access camera for gauge scanning: ' + error.message, 'danger');
-    }
-}
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_QR_CODE]
+            };
 
-function captureGaugeImage() {
-    const video = document.getElementById('gauge-scan-video');
-    const canvas = document.getElementById('gauge-scan-canvas');
-    const context = canvas.getContext('2d');
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Stop camera
-    if (gaugeStream) {
-        gaugeStream.getTracks().forEach(track => track.stop());
-        gaugeStream = null;
-    }
-    
-    // Show preview
-    const preview = document.getElementById('gauge-scan-preview');
-    preview.innerHTML = `
-        <div class="alert alert-success">
-            <i class="bi bi-check-circle"></i> Gauge image captured successfully
-        </div>
-        <img src="${canvas.toDataURL()}" class="img-fluid rounded border" alt="Gauge capture" style="max-height: 200px;">
-        <div class="mt-2">
-            <small class="text-muted">Processing image to detect water level...</small>
-        </div>
-    `;
-    
-    document.getElementById('capture-gauge-btn').style.display = 'none';
-    document.getElementById('retry-gauge-scan').style.display = 'block';
-    
-    // Process with OCR
-    processGaugeWithOCR(canvas);
-}
+            await qrScanner.start(
+                { facingMode: "environment" },
+                config,
+                onQRScanSuccess,
+                onQRScanFailure
+            );
 
-async function processGaugeWithOCR(canvas) {
-    const resultDiv = document.getElementById('gauge-scan-result');
-    resultDiv.style.display = 'block';
-    
-    try {
-        debugLog('Starting OCR processing...');
-        
-        const worker = await Tesseract.createWorker('eng');
-        
-        // Configure for number recognition
-        await worker.setParameters({
-            tessedit_char_whitelist: '0123456789.',
-            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
-        });
-        
-        const { data: { text, confidence } } = await worker.recognize(canvas);
-        await worker.terminate();
-        
-        debugLog('OCR Result - Text: "' + text + '", Confidence: ' + confidence);
-        
-        // Extract numbers from OCR result
-        const numbers = text.match(/\d+\.?\d*/g);
-        if (numbers && numbers.length > 0 && confidence > 50) {
-            const detectedLevel = parseFloat(numbers[0]).toFixed(2);
-            
-            resultDiv.innerHTML = `
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle"></i> 
-                    <strong>Detected Level:</strong> <span id="detected-level" class="fw-bold">${detectedLevel}</span> meters
-                    <br>
-                    <small class="text-muted">
-                        Confidence: ${confidence.toFixed(1)}% | 
-                        Raw text: "${text.trim()}"
-                    </small>
-                </div>
-                <div class="alert alert-warning">
-                    <small>
-                        <i class="bi bi-exclamation-triangle"></i>
-                        Please verify this reading matches the actual gauge before using.
-                    </small>
-                </div>
-            `;
-            
-            document.getElementById('use-scanned-level').style.display = 'block';
-            
-        } else {
-            resultDiv.innerHTML = `
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <strong>No clear numbers detected</strong>
-                    <br>
-                    <small class="text-muted">
-                        Confidence: ${confidence.toFixed(1)}% | 
-                        Raw text: "${text.trim()}"
-                        <br>Please enter the water level manually or try again with a clearer image.
-                    </small>
-                </div>
-            `;
+            debugLog('QR scanner started successfully');
+
+        } catch (err) {
+            debugLog('QR Scanner error: ' + err.message);
+            showQRResult('QR scanner not available: ' + err.message, 'warning');
+            document.getElementById('manual-qr-entry').style.display = 'block';
+            document.getElementById('scan-qr-btn').style.display = 'block';
+            document.getElementById('qr-scanner').style.display = 'none';
         }
-        
-    } catch (error) {
-        console.error('OCR error:', error);
-        resultDiv.innerHTML = `
-            <div class="alert alert-danger">
-                <i class="bi bi-x-circle"></i>
-                <strong>Error processing image</strong>
-                <br>
-                <small class="text-muted">Please enter the water level manually.</small>
-            </div>
-        `;
     }
-}
 
-function useScannedLevel() {
-    const detectedLevel = document.getElementById('detected-level').textContent;
-    document.getElementById('water_level').value = detectedLevel;
-    
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('gaugeScanModal'));
-    modal.hide();
-    
-    showGlobalAlert(`Water level set to ${detectedLevel} meters from gauge scan`, 'success');
-    
-    // Enable submit button if photo is captured
-    if (capturedPhoto) {
-        document.getElementById('submit-btn').disabled = false;
-    }
-}
-
-function retryGaugeScan() {
-    document.getElementById('gauge-scan-preview').innerHTML = '';
-    document.getElementById('gauge-scan-result').style.display = 'none';
-    document.getElementById('use-scanned-level').style.display = 'none';
-    document.getElementById('retry-gauge-scan').style.display = 'none';
-    document.getElementById('capture-gauge-btn').style.display = 'none';
-    document.getElementById('start-gauge-scan').style.display = 'block';
-    
-    startGaugeScanner();
-}
-
-// QR Code Scanner Functions (existing)
-async function startQRScanner() {
-    try {
-        if (!isQRScannerAvailable()) {
-            throw new Error('QR Scanner library not loaded. Please check your internet connection.');
+    function stopQRScanner() {
+        if (qrScanner) {
+            qrScanner.stop().then(() => {
+                qrScanner = null;
+                debugLog('QR scanner stopped');
+            }).catch(err => {
+                console.error('Error stopping QR scanner:', err);
+            });
         }
-        
-        document.getElementById('scan-qr-btn').style.display = 'none';
-        document.getElementById('qr-scanner').style.display = 'block';
-        document.getElementById('qr-result').style.display = 'none';
-        document.getElementById('manual-qr-entry').style.display = 'none';
-        
-        qrScanner = new Html5Qrcode("qr-reader");
-        
-        const config = {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_QR_CODE]
-        };
-        
-        await qrScanner.start(
-            { facingMode: "environment" },
-            config,
-            onQRScanSuccess,
-            onQRScanFailure
-        );
-        
-        debugLog('QR scanner started successfully');
-        
-    } catch (err) {
-        debugLog('QR Scanner error: ' + err.message);
-        showQRResult('QR scanner not available: ' + err.message, 'warning');
-        document.getElementById('manual-qr-entry').style.display = 'block';
+
         document.getElementById('scan-qr-btn').style.display = 'block';
         document.getElementById('qr-scanner').style.display = 'none';
     }
-}
 
-function stopQRScanner() {
-    if (qrScanner) {
-        qrScanner.stop().then(() => {
-            qrScanner = null;
-            debugLog('QR scanner stopped');
-        }).catch(err => {
-            console.error('Error stopping QR scanner:', err);
-        });
+    async function onQRScanSuccess(decodedText) {
+        debugLog('QR Code scanned: ' + decodedText);
+        stopQRScanner();
+        await verifyQRCode(decodedText);
     }
-    
-    document.getElementById('scan-qr-btn').style.display = 'block';
-    document.getElementById('qr-scanner').style.display = 'none';
-}
 
-async function onQRScanSuccess(decodedText) {
-    debugLog('QR Code scanned: ' + decodedText);
-    stopQRScanner();
-    await verifyQRCode(decodedText);
-}
-
-function onQRScanFailure(error) {
-    // Silent failure during scanning
-}
-
-// Manual QR code verification
-async function verifyManualQRCode() {
-    const manualInput = document.getElementById('manual-qr-input').value.trim();
-    if (!manualInput) {
-        showQRResult('Please enter a QR code', 'danger');
-        return;
+    function onQRScanFailure(error) {
+        // Silent failure during scanning
     }
-    
-    await verifyQRCode(manualInput);
-}
 
-async function verifyQRCode(qrData) {
-    try {
-        const response = await fetch('/api/verify-qr', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                site_id: document.querySelector('input[name="site_id"]').value,
-                qr_data: qrData
-            })
-        });
-        
-        const data = await response.json();
-        debugLog('QR verification response: ' + JSON.stringify(data));
-        
-        if (data.verified) {
-            showQRResult('✓ QR Code verified! Location validated successfully.', 'success');
-            
-            verificationMethod = 'qr';
-            document.getElementById('verification_method').value = 'qr';
-            document.getElementById('qr_code_scanned').value = qrData;
-            
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((position) => {
-                    document.getElementById('latitude').value = position.coords.latitude;
-                    document.getElementById('longitude').value = position.coords.longitude;
-                    document.getElementById('user-coords').textContent = 
-                        `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
-                    
-                    enableCameraAndInput();
-                }, () => {
+    // Manual QR code verification
+    async function verifyManualQRCode() {
+        const manualInput = document.getElementById('manual-qr-input').value.trim();
+        if (!manualInput) {
+            showQRResult('Please enter a QR code', 'danger');
+            return;
+        }
+
+        await verifyQRCode(manualInput);
+    }
+
+    async function verifyQRCode(qrData) {
+        try {
+            const response = await fetch('/api/verify-qr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    site_id: document.querySelector('input[name="site_id"]').value,
+                    qr_data: qrData
+                })
+            });
+
+            const data = await response.json();
+            debugLog('QR verification response: ' + JSON.stringify(data));
+
+            if (data.verified) {
+                showQRResult('✓ QR Code verified! Location validated successfully.', 'success');
+
+                verificationMethod = 'qr';
+                document.getElementById('verification_method').value = 'qr';
+                document.getElementById('qr_code_scanned').value = qrData;
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((position) => {
+                        document.getElementById('latitude').value = position.coords.latitude;
+                        document.getElementById('longitude').value = position.coords.longitude;
+                        document.getElementById('user-coords').textContent =
+                            `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+
+                        enableCameraAndInput();
+                    }, () => {
+                        document.getElementById('latitude').value = data.site_lat;
+                        document.getElementById('longitude').value = data.site_lon;
+                        document.getElementById('user-coords').textContent =
+                            `${data.site_lat.toFixed(6)}, ${data.site_lon.toFixed(6)} (Site coordinates)`;
+
+                        enableCameraAndInput();
+                    });
+                } else {
                     document.getElementById('latitude').value = data.site_lat;
                     document.getElementById('longitude').value = data.site_lon;
-                    document.getElementById('user-coords').textContent = 
+                    document.getElementById('user-coords').textContent =
                         `${data.site_lat.toFixed(6)}, ${data.site_lon.toFixed(6)} (Site coordinates)`;
-                    
+
                     enableCameraAndInput();
-                });
-            } else {
-                document.getElementById('latitude').value = data.site_lat;
-                document.getElementById('longitude').value = data.site_lon;
-                document.getElementById('user-coords').textContent = 
-                    `${data.site_lat.toFixed(6)}, ${data.site_lon.toFixed(6)} (Site coordinates)`;
-                
-                enableCameraAndInput();
-            }
-            
-        } else {
-            showQRResult('✗ Invalid QR code for this site. Please scan the correct QR code.', 'danger');
-        }
-        
-    } catch (error) {
-        debugLog('QR verification error: ' + error.message);
-        showQRResult('Error verifying QR code: ' + error.message, 'danger');
-    }
-}
-
-function showQRResult(message, type) {
-    const resultDiv = document.getElementById('qr-result');
-    resultDiv.textContent = message;
-    resultDiv.className = `alert alert-${type}`;
-    resultDiv.style.display = 'block';
-}
-
-function enableCameraAndInput() {
-    locationVerified = true;
-    document.getElementById('start-camera-btn').disabled = false;
-    
-    const methodDisplay = document.getElementById('verification-method-display');
-    const methodText = document.getElementById('method-text');
-    methodText.textContent = verificationMethod.toUpperCase();
-    methodDisplay.style.display = 'block';
-    
-    updateLocationStatus('Location verified via ' + verificationMethod.toUpperCase() + '! You can now capture photos.', true);
-}
-
-// Location functions (existing)
-function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371000;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-}
-
-function getLocation() {
-    debugLog('Getting location...');
-    if (!navigator.geolocation) {
-        updateLocationStatus('Geolocation is not supported by this browser. Please use QR code validation.', false);
-        return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-        async (position) => {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            debugLog('Location obtained: ' + lat + ', ' + lon);
-            
-            document.getElementById('latitude').value = lat;
-            document.getElementById('longitude').value = lon;
-            document.getElementById('user-coords').textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
-            
-            try {
-                const siteId = document.querySelector('input[name="site_id"]').value;
-                debugLog('Verifying location with server for site: ' + siteId);
-                
-                const response = await fetch('/api/verify-location', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        site_id: siteId,
-                        latitude: lat,
-                        longitude: lon
-                    })
-                });
-                
-                const data = await response.json();
-                debugLog('Server response: ' + JSON.stringify(data));
-                
-                const distance = calculateDistance(lat, lon, data.site_lat, data.site_lon);
-                document.getElementById('distance-info').textContent = 
-                    `Distance from site: ${distance.toFixed(1)} meters`;
-                
-                if (data.verified) {
-                    locationVerified = true;
-                    verificationMethod = 'gps';
-                    document.getElementById('verification_method').value = 'gps';
-                    
-                    document.getElementById('start-camera-btn').disabled = false;
-                    
-                    const methodDisplay = document.getElementById('verification-method-display');
-                    const methodText = document.getElementById('method-text');
-                    methodText.textContent = 'GPS';
-                    methodDisplay.style.display = 'block';
-                    
-                    updateLocationStatus('Location verified! You can now capture photos.', true);
-                } else {
-                    updateLocationStatus('You are outside the permitted zone. Please move closer to the monitoring site or use QR code validation.', false);
-                    document.getElementById('start-camera-btn').disabled = true;
                 }
-                
-            } catch (error) {
-                debugLog('Error verifying location: ' + error.message);
-                updateLocationStatus('Error verifying location. Please try QR code validation.', false);
+
+            } else {
+                showQRResult('✗ Invalid QR code for this site. Please scan the correct QR code.', 'danger');
             }
-        },
-        (error) => {
-            debugLog('Location error: ' + error.message);
-            let message = 'Error getting your location. ';
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    message += 'Location access was denied. Please enable location services or use QR code validation.';
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    message += 'Location information is unavailable. Please use QR code validation.';
-                    break;
-                case error.TIMEOUT:
-                    message += 'Location request timed out. Please use QR code validation.';
-                    break;
-                default:
-                    message += 'An unknown error occurred. Please use QR code validation.';
-                    break;
-            }
-            updateLocationStatus(message, false);
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
+
+        } catch (error) {
+            debugLog('QR verification error: ' + error.message);
+            showQRResult('Error verifying QR code: ' + error.message, 'danger');
         }
-    );
-}
+    }
 
-function updateLocationStatus(message, isSuccess) {
-    const statusDiv = document.getElementById('location-status');
-    statusDiv.innerHTML = isSuccess ? 
-        `<span class="text-success">✓ ${message}</span>` :
-        `<span class="text-danger">✗ ${message}</span>`;
-    statusDiv.className = `alert alert-${isSuccess ? 'success' : 'danger'}`;
-}
+    function showQRResult(message, type) {
+        const resultDiv = document.getElementById('qr-result');
+        resultDiv.textContent = message;
+        resultDiv.className = `alert alert-${type}`;
+        resultDiv.style.display = 'block';
+    }
 
-// Form submission
-document.getElementById('reading-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    debugLog('Form submission started...');
-    
-    if (!capturedPhoto) {
-        alert('Please capture a photo before submitting.');
-        return;
+    function enableCameraAndInput() {
+        locationVerified = true;
+        document.getElementById('start-camera-btn').disabled = false;
+
+        const methodDisplay = document.getElementById('verification-method-display');
+        const methodText = document.getElementById('method-text');
+        methodText.textContent = verificationMethod.toUpperCase();
+        methodDisplay.style.display = 'block';
+
+        updateLocationStatus('Location verified via ' + verificationMethod.toUpperCase() + '! You can now capture photos.', true);
     }
-    
-    if (!locationVerified) {
-        alert('Please verify your location using GPS or QR code before submitting.');
-        return;
+
+    // Location functions (existing)
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371000;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
     }
-    
-    const waterLevel = document.getElementById('water_level').value;
-    if (!waterLevel) {
-        alert('Please enter water level.');
-        return;
+
+    function getLocation() {
+        debugLog('Getting location...');
+        if (!navigator.geolocation) {
+            updateLocationStatus('Geolocation is not supported by this browser. Please use QR code validation.', false);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                debugLog('Location obtained: ' + lat + ', ' + lon);
+
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lon;
+                document.getElementById('user-coords').textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+
+                try {
+                    const siteId = document.querySelector('input[name="site_id"]').value;
+                    debugLog('Verifying location with server for site: ' + siteId);
+
+                    const response = await fetch('/api/verify-location', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            site_id: siteId,
+                            latitude: lat,
+                            longitude: lon
+                        })
+                    });
+
+                    const data = await response.json();
+                    debugLog('Server response: ' + JSON.stringify(data));
+
+                    const distance = calculateDistance(lat, lon, data.site_lat, data.site_lon);
+                    document.getElementById('distance-info').textContent =
+                        `Distance from site: ${distance.toFixed(1)} meters`;
+
+                    if (data.verified) {
+                        locationVerified = true;
+                        verificationMethod = 'gps';
+                        document.getElementById('verification_method').value = 'gps';
+
+                        document.getElementById('start-camera-btn').disabled = false;
+
+                        const methodDisplay = document.getElementById('verification-method-display');
+                        const methodText = document.getElementById('method-text');
+                        methodText.textContent = 'GPS';
+                        methodDisplay.style.display = 'block';
+
+                        updateLocationStatus('Location verified! You can now capture photos.', true);
+                    } else {
+                        updateLocationStatus('You are outside the permitted zone. Please move closer to the monitoring site or use QR code validation.', false);
+                        document.getElementById('start-camera-btn').disabled = true;
+                    }
+
+                } catch (error) {
+                    debugLog('Error verifying location: ' + error.message);
+                    updateLocationStatus('Error verifying location. Please try QR code validation.', false);
+                }
+            },
+            (error) => {
+                debugLog('Location error: ' + error.message);
+                let message = 'Error getting your location. ';
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        message += 'Location access was denied. Please enable location services or use QR code validation.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message += 'Location information is unavailable. Please use QR code validation.';
+                        break;
+                    case error.TIMEOUT:
+                        message += 'Location request timed out. Please use QR code validation.';
+                        break;
+                    default:
+                        message += 'An unknown error occurred. Please use QR code validation.';
+                        break;
+                }
+                updateLocationStatus(message, false);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
     }
-    
-    const submitBtn = document.getElementById('submit-btn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Submitting...';
-    
-    try {
-        debugLog('Converting photo to blob...');
-        const response = await fetch(capturedPhoto);
-        const blob = await response.blob();
-        debugLog('Blob created, size: ' + blob.size + ' bytes');
-        
-        const formData = new FormData();
-        formData.append('site_id', document.querySelector('input[name="site_id"]').value);
-        formData.append('water_level', waterLevel);
-        formData.append('latitude', document.getElementById('latitude').value);
-        formData.append('longitude', document.getElementById('longitude').value);
-        formData.append('verification_method', document.getElementById('verification_method').value);
-        formData.append('qr_code_scanned', document.getElementById('qr_code_scanned').value);
-        formData.append('photo', blob, 'photo.jpg');
-        
-        debugLog('Sending form data to server...');
-        const submitResponse = await fetch('/api/submit-reading', {
-            method: 'POST',
-            body: formData
+
+    function updateLocationStatus(message, isSuccess) {
+        const statusDiv = document.getElementById('location-status');
+        statusDiv.innerHTML = isSuccess ?
+            `<span class="text-success">✓ ${message}</span>` :
+            `<span class="text-danger">✗ ${message}</span>`;
+        statusDiv.className = `alert alert-${isSuccess ? 'success' : 'danger'}`;
+    }
+
+    // Form submission
+    document.getElementById('reading-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        debugLog('Form submission started...');
+
+        if (!capturedPhoto) {
+            alert('Please capture a photo before submitting.');
+            return;
+        }
+
+        if (!locationVerified) {
+            alert('Please verify your location using GPS or QR code before submitting.');
+            return;
+        }
+
+        const waterLevel = document.getElementById('water_level').value;
+        if (!waterLevel) {
+            alert('Please enter water level.');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Submitting...';
+
+        try {
+            debugLog('Converting photo to blob...');
+
+            // Robust DataURL to Blob conversion
+            const dataURLtoBlob = (dataurl) => {
+                const arr = dataurl.split(',');
+                const mime = arr[0].match(/:(.*?);/)[1];
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                return new Blob([u8arr], { type: mime });
+            };
+
+            const blob = dataURLtoBlob(capturedPhoto);
+            debugLog('Blob created, size: ' + blob.size + ' bytes');
+
+            const formData = new FormData();
+            formData.append('site_id', document.querySelector('input[name="site_id"]').value);
+            formData.append('water_level', waterLevel);
+            formData.append('latitude', document.getElementById('latitude').value);
+            formData.append('longitude', document.getElementById('longitude').value);
+            formData.append('verification_method', document.getElementById('verification_method').value);
+            formData.append('qr_code_scanned', document.getElementById('qr_code_scanned').value);
+            formData.append('photo', blob, 'photo.jpg');
+
+            debugLog('Sending form data to server...');
+            const submitResponse = await fetch('/api/submit-reading', {
+                method: 'POST',
+                body: formData
+            });
+
+            debugLog('Server response status: ' + submitResponse.status);
+            const result = await submitResponse.json();
+            debugLog('Server response: ' + JSON.stringify(result));
+
+            if (result.success) {
+                alert('Reading submitted successfully!');
+                window.location.href = '/dashboard';
+            } else {
+                throw new Error(result.error || 'Submission failed');
+            }
+
+        } catch (error) {
+            debugLog('Submission error: ' + error.message);
+            alert('Error submitting reading: ' + error.message);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Submit Reading';
+        }
+    });
+
+    // Enable submit button when water level is entered and photo is captured
+    document.getElementById('water_level').addEventListener('input', function () {
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = !(this.value && capturedPhoto && locationVerified);
+    });
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function () {
+        // Camera event listeners
+        document.getElementById('start-camera-btn').addEventListener('click', function () {
+            initCamera('environment');
         });
-        
-        debugLog('Server response status: ' + submitResponse.status);
-        const result = await submitResponse.json();
-        debugLog('Server response: ' + JSON.stringify(result));
-        
-        if (result.success) {
-            alert('Reading submitted successfully!');
-            window.location.href = '/dashboard';
-        } else {
-            throw new Error(result.error || 'Submission failed');
+
+        document.getElementById('capture-btn').addEventListener('click', capturePhoto);
+        document.getElementById('retake-btn').addEventListener('click', retakePhoto);
+        document.getElementById('switch-camera-btn').addEventListener('click', switchCamera);
+
+        // QR scanner event listeners
+        document.getElementById('scan-qr-btn').addEventListener('click', startQRScanner);
+        document.getElementById('stop-qr-btn').addEventListener('click', stopQRScanner);
+        document.getElementById('submit-manual-qr').addEventListener('click', verifyManualQRCode);
+
+        // --- GAUGE SCANNER LOGIC ---
+        let gaugeStream = null;
+        const gaugeModal = new bootstrap.Modal(document.getElementById('gaugeScanModal'));
+
+        document.getElementById('scan-gauge-btn').addEventListener('click', function () {
+            gaugeModal.show();
+            startGaugeCamera();
+        });
+
+        document.getElementById('gaugeScanModal').addEventListener('hidden.bs.modal', function () {
+            stopGaugeCamera();
+            resetGaugeModal();
+        });
+
+        async function startGaugeCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+                gaugeStream = stream;
+                const video = document.getElementById('gauge-video');
+                video.srcObject = stream;
+                video.play();
+            } catch (err) {
+                console.error("Error accessing gauge camera:", err);
+                alert("Could not access camera for gauge scanning.");
+            }
         }
-        
-    } catch (error) {
-        debugLog('Submission error: ' + error.message);
-        alert('Error submitting reading: ' + error.message);
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Submit Reading';
-    }
-});
 
-// Enable submit button when water level is entered and photo is captured
-document.getElementById('water_level').addEventListener('input', function() {
-    const submitBtn = document.getElementById('submit-btn');
-    submitBtn.disabled = !(this.value && capturedPhoto && locationVerified);
-});
+        function stopGaugeCamera() {
+            if (gaugeStream) {
+                gaugeStream.getTracks().forEach(track => track.stop());
+                gaugeStream = null;
+            }
+        }
 
-// Event Listeners
-document.addEventListener('DOMContentLoaded', function() {
-    // Camera event listeners
-    document.getElementById('start-camera-btn').addEventListener('click', function() {
-        initCamera('environment');
+        document.getElementById('capture-gauge-btn').addEventListener('click', async function () {
+            const video = document.getElementById('gauge-video');
+            const canvas = document.getElementById('gauge-canvas');
+            const context = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageDataUrl = canvas.toDataURL('image/jpeg');
+
+            // Show loading state
+            document.getElementById('gauge-loading').classList.remove('d-none');
+            document.getElementById('gauge-result').classList.add('d-none');
+            document.getElementById('capture-gauge-btn').disabled = true;
+
+            try {
+                const response = await fetch('/api/analyze-gauge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_data: imageDataUrl })
+                });
+
+                const data = await response.json();
+
+                document.getElementById('gauge-loading').classList.add('d-none');
+                document.getElementById('gauge-result').classList.remove('d-none');
+                document.getElementById('capture-gauge-btn').disabled = false;
+
+                const resultDiv = document.getElementById('gauge-result');
+
+                if (data.success && data.water_level !== null) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <h6><i class="bi bi-check-circle"></i> Reading Detected!</h6>
+                            <div class="display-4 text-center my-2">${data.water_level} m</div>
+                            <small class="d-block text-center text-muted">Confidence: ${(data.confidence * 100).toFixed(0)}%</small>
+                            <p class="mb-0 mt-2 small">${data.message || ''}</p>
+                        </div>
+                    `;
+
+                    // Auto-fill the manual input
+                    document.getElementById('water_level').value = data.water_level;
+
+                    // Trigger input event to enable submit button if other conditions met
+                    document.getElementById('water_level').dispatchEvent(new Event('input'));
+
+                    const useBtn = document.getElementById('use-gauge-value-btn');
+                    useBtn.classList.remove('d-none');
+                    useBtn.onclick = function () {
+                        gaugeModal.hide();
+                    };
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle"></i> Could not read gauge</h6>
+                            <p class="mb-0">${data.message || data.error || 'Try moving closer or improving lighting.'}</p>
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                console.error("Gauge analysis error:", error);
+                document.getElementById('gauge-loading').classList.add('d-none');
+                document.getElementById('gauge-result').classList.remove('d-none');
+                document.getElementById('gauge-result').innerHTML = `<div class="alert alert-danger">Error analyzing image. Please try again.</div>`;
+                document.getElementById('capture-gauge-btn').disabled = false;
+            }
+        });
+
+        function resetGaugeModal() {
+            document.getElementById('gauge-loading').classList.add('d-none');
+            document.getElementById('gauge-result').classList.add('d-none');
+            document.getElementById('use-gauge-value-btn').classList.add('d-none');
+            document.getElementById('capture-gauge-btn').disabled = false;
+        }
+
+        // Allow Enter key in manual QR input
+        document.getElementById('manual-qr-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                verifyManualQRCode();
+            }
+        });
+
+        // Initialize page
+        debugLog('Page loaded, initializing...');
+        getLocation();
+
+        // Refresh location every 10 seconds
+        setInterval(getLocation, 10000);
     });
 
-    document.getElementById('capture-btn').addEventListener('click', capturePhoto);
-    document.getElementById('retake-btn').addEventListener('click', retakePhoto);
-    document.getElementById('switch-camera-btn').addEventListener('click', switchCamera);
-    
-    // QR scanner event listeners
-    document.getElementById('scan-qr-btn').addEventListener('click', startQRScanner);
-    document.getElementById('stop-qr-btn').addEventListener('click', stopQRScanner);
-    document.getElementById('submit-manual-qr').addEventListener('click', verifyManualQRCode);
-    
-    // Gauge scanner event listeners
-    document.getElementById('scan-gauge-btn').addEventListener('click', startGaugeScanner);
-    document.getElementById('start-gauge-scan').addEventListener('click', startGaugeScanner);
-    document.getElementById('capture-gauge-btn').addEventListener('click', captureGaugeImage);
-    document.getElementById('use-scanned-level').addEventListener('click', useScannedLevel);
-    document.getElementById('retry-gauge-scan').addEventListener('click', retryGaugeScan);
-    
-    // Allow Enter key in manual QR input
-    document.getElementById('manual-qr-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            verifyManualQRCode();
-        }
-    });
-
-    // Cleanup gauge scanner when modal closes
-    document.getElementById('gaugeScanModal').addEventListener('hidden.bs.modal', function() {
+    // Clean up when leaving page
+    window.addEventListener('beforeunload', function () {
+        stopCameraStream();
+        stopQRScanner();
         if (gaugeStream) {
             gaugeStream.getTracks().forEach(track => track.stop());
-            gaugeStream = null;
         }
     });
-
-    // Initialize page
-    debugLog('Page loaded, initializing...');
-    getLocation();
-    
-    // Refresh location every 10 seconds
-    setInterval(getLocation, 10000);
-});
-
-// Clean up when leaving page
-window.addEventListener('beforeunload', function() {
-    stopCameraStream();
-    stopQRScanner();
-    if (gaugeStream) {
-        gaugeStream.getTracks().forEach(track => track.stop());
-    }
-});
 </script>
 
 <style>
-#qr-reader {
-    position: relative;
-}
+    #qr-reader {
+        position: relative;
+    }
 
-#qr-reader video {
-    width: 100% !important;
-    height: 300px !important;
-    border-radius: 8px;
-}
+    #qr-reader video {
+        width: 100% !important;
+        height: 300px !important;
+        border-radius: 8px;
+    }
 
-#qr-reader div:first-child {
-    border: none !important;
-}
+    #qr-reader div:first-child {
+        border: none !important;
+    }
 
-.btn {
-    border-radius: 6px;
-}
+    .btn {
+        border-radius: 6px;
+    }
 
-.alert {
-    border-radius: 8px;
-}
+    .alert {
+        border-radius: 8px;
+    }
 
-.card {
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
+    .card {
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
 
-.form-control {
-    border-radius: 6px;
-}
+    .form-control {
+        border-radius: 6px;
+    }
 
-#manual-qr-entry {
-    border-left: 4px solid #ffc107;
-    padding-left: 15px;
-}
+    #manual-qr-entry {
+        border-left: 4px solid #ffc107;
+        padding-left: 15px;
+    }
 
-#gauge-scan-video, #video {
-    border-radius: 8px;
-}
+    #gauge-scan-video,
+    #video {
+        border-radius: 8px;
+    }
 </style>
 {% endblock %}

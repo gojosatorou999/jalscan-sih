@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from models import db, WaterLevelSubmission, TamperDetection, User
 from utils.geofence import calculate_distance
 
+from sqlalchemy import func
+
 class TamperDetectionEngine:
     def __init__(self, app):
         self.app = app
@@ -130,7 +132,7 @@ class TamperDetectionEngine:
             WaterLevelSubmission.site_id == submission.site_id,
             WaterLevelSubmission.timestamp > submission.timestamp - timedelta(minutes=30),
             WaterLevelSubmission.id != submission.id,
-            abs(WaterLevelSubmission.water_level - submission.water_level) < 0.1  # Similar water level
+            func.abs(WaterLevelSubmission.water_level - submission.water_level) < 0.1  # Similar water level
         ).first()
         
         if similar_submissions:
