@@ -47,6 +47,7 @@
 <body class="bg-light">
 
     <div id="wrapper">
+        {% if current_user.is_authenticated %}
         <!-- Sidebar -->
         <aside id="sidebar-wrapper">
             <div class="sidebar-heading text-white">
@@ -146,6 +147,7 @@
             </div>
             {% endif %}
         </aside>
+        {% endif %}
 
         <!-- Page Content -->
         <div id="page-content-wrapper">
@@ -189,9 +191,11 @@
 
             <!-- Top Navbar (Toggle + User Menu) - Desktop Only -->
             <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom top-navbar px-3 d-none d-lg-flex">
+                {% if current_user.is_authenticated %}
                 <button class="btn btn-outline-primary" id="sidebarToggle">
                     <i class="bi bi-list"></i>
                 </button>
+                {% endif %}
 
                 <!-- Weather Map Specific Controls -->
                 {% if request.endpoint == 'weather_map' %}
@@ -208,6 +212,34 @@
 
                 <div class="ms-auto d-flex align-items-center">
                     {% if current_user.is_authenticated %}
+                    <!-- Notification Bell -->
+                    <div class="dropdown me-3">
+                        <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button"
+                            data-bs-toggle="dropdown">
+                            <i class="bi bi-bell fs-5"></i>
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count"
+                                style="display: none; font-size: 0.65rem;">0</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end shadow notification-dropdown"
+                            style="width: 320px; max-height: 400px; overflow-y: auto;">
+                            <h6 class="dropdown-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-bell me-1"></i> Notifications</span>
+                                <button class="btn btn-link btn-sm p-0 text-muted" onclick="markAllRead()">Mark all
+                                    read</button>
+                            </h6>
+                            <div id="notification-list">
+                                <div class="text-center py-3 text-muted">
+                                    <i class="bi bi-inbox"></i> Loading...
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-center small text-primary" href="/flood-risk">
+                                View All Alerts <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+
                     <div class="dropdown">
                         <a class="nav-link dropdown-toggle text-dark d-flex align-items-center" href="#"
                             id="userDropdown" role="button" data-bs-toggle="dropdown">
@@ -320,11 +352,13 @@
                             </a>
                         </li>
                         {% endif %}
+                        {% if current_user.role == 'admin' %}
                         <li>
                             <a class="dropdown-item" href="{{ url_for('admin_public_submissions') }}">
-                                <i class="bi bi-globe me-2"></i>Public Submissions
+                                <i class="bi bi-people me-2"></i>Public Submissions
                             </a>
                         </li>
+                        {% endif %}
                         <li>
                             <a class="dropdown-item" href="{{ url_for('ai_call_reporting') }}">
                                 <i class="bi bi-telephone me-2"></i>AI Call Reporting
@@ -336,11 +370,35 @@
                             </a>
                         </li>
                         <li>
+                            <a class="dropdown-item" href="{{ url_for('flood_risk_dashboard') }}">
+                                <i class="bi bi-tsunami me-2"></i>Flood Risk
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('river_memory_dashboard') }}">
+                                <i class="bi bi-cpu me-2"></i>River Memory AI
+                            </a>
+                        </li>
+                        <li>
                             <a class="dropdown-item" href="{{ url_for('analytics') }}">
                                 <i class="bi bi-graph-up me-2"></i>Analytics
                             </a>
                         </li>
-
+                        {% if current_user.role == 'admin' %}
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('admin_sites') }}">
+                                <i class="bi bi-geo-alt me-2"></i>Sites
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('admin_subscribers') }}">
+                                <i class="bi bi-whatsapp me-2"></i>Subscribers
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
 
@@ -359,18 +417,7 @@
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li>
-                            <a class="dropdown-item text-white {% if request.endpoint == 'admin_sites' %}active{% endif %}"
-                                href="{{ url_for('admin_sites') }}">
-                                <i class="bi bi-geo-alt"></i> Sites
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item text-white {% if request.endpoint == 'admin_subscribers' %}active{% endif %}"
-                                href="{{ url_for('admin_subscribers') }}">
-                                <i class="bi bi-whatsapp"></i> Subscribers
-                            </a>
-                        </li>
+
                         <li>
                             <a class="dropdown-item text-white" href="{{ url_for('auth.logout') }}">
                                 <i class="bi bi-box-arrow-right"></i> Logout
@@ -715,6 +762,47 @@ ${message}
             -ms-user-select: none;
             user-select: none;
             background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        /* Sticky Footer Layout */
+        html,
+        body {
+            height: 100%;
+        }
+
+        #wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Content wrapper grows to push footer down */
+        #wrapper>div:first-child {
+            flex: 1 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* For non-authenticated pages (login, public upload) */
+        .content-wrapper-public {
+            flex: 1 0 auto;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Login page specific - center the card */
+        .login-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Ensure footer stays at bottom */
+        .app-footer {
+            flex-shrink: 0;
         }
 
         /* Header and Navigation Styles (Mobile) */
@@ -1030,6 +1118,7 @@ ${message}
         }
     </style>
 
+    {% if current_user.is_authenticated %}
     <!-- JalScan GPT Chat Widget -->
     <div class="gpt-chat-widget" id="gpt-chat-widget">
         <div class="gpt-chat-header">
@@ -1063,6 +1152,7 @@ ${message}
         <span class="pulse-ring"></span>
         <i class="bi bi-robot"></i>
     </button>
+    {% endif %}
 
     <script>
         function toggleJalScanGPT() {
@@ -1127,6 +1217,73 @@ ${message}
             `;
                 });
         }
+
+        // Notification System
+        function loadNotifications() {
+            fetch('/api/flood-risk/all-sites')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('notification-list');
+                    if (!list) return;
+
+                    if (!data.success || !data.sites || data.sites.length === 0) {
+                        list.innerHTML = '<div class="text-center py-3 text-muted"><i class="bi bi-check-circle"></i> No alerts</div>';
+                        return;
+                    }
+
+                    // Filter for high-risk sites
+                    const alerts = data.sites.filter(s => s.risk_category === 'FLOOD_RISK' || s.risk_category === 'FLASH_FLOOD_RISK');
+                    const cautions = data.sites.filter(s => s.risk_category === 'CAUTION');
+
+                    const countBadge = document.querySelector('.notification-count');
+                    if (alerts.length > 0 && countBadge) {
+                        countBadge.textContent = alerts.length;
+                        countBadge.style.display = '';
+                    }
+
+                    if (alerts.length === 0 && cautions.length === 0) {
+                        list.innerHTML = '<div class="text-center py-3 text-muted"><i class="bi bi-check-circle text-success fs-4"></i><br><small>All sites safe!</small></div>';
+                        return;
+                    }
+
+                    let html = '';
+                    alerts.forEach(site => {
+                        html += `
+                            <a href="/flood-risk" class="dropdown-item d-flex align-items-start py-2 border-bottom">
+                                <span class="badge bg-danger me-2 mt-1">⚠️</span>
+                                <div>
+                                    <strong class="d-block">${site.site_name || 'Site ' + site.monitoring_site_id}</strong>
+                                    <small class="text-danger">${site.risk_category.replace('_', ' ')}</small>
+                                </div>
+                            </a>`;
+                    });
+                    cautions.slice(0, 3).forEach(site => {
+                        html += `
+                            <a href="/flood-risk" class="dropdown-item d-flex align-items-start py-2 border-bottom">
+                                <span class="badge bg-warning me-2 mt-1">⚡</span>
+                                <div>
+                                    <strong class="d-block">${site.site_name || 'Site ' + site.monitoring_site_id}</strong>
+                                    <small class="text-warning">Caution</small>
+                                </div>
+                            </a>`;
+                    });
+
+                    list.innerHTML = html || '<div class="text-center py-3 text-muted">No alerts</div>';
+                })
+                .catch(err => {
+                    console.log('Notifications not available');
+                });
+        }
+
+        function markAllRead() {
+            const countBadge = document.querySelector('.notification-count');
+            if (countBadge) countBadge.style.display = 'none';
+        }
+
+        // Load notifications on page load
+        document.addEventListener('DOMContentLoaded', loadNotifications);
+        // Refresh every 2 minutes
+        setInterval(loadNotifications, 120000);
     </script>
 </body>
 

@@ -85,10 +85,11 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>River Memory Timeline</h5>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary active" onclick="setTimeRange(7)">7 Days</button>
-                        <button class="btn btn-outline-primary" onclick="setTimeRange(30)">30 Days</button>
-                        <button class="btn btn-outline-primary" onclick="setTimeRange(90)">90 Days</button>
+                    <div class="btn-group btn-group-sm" id="time-range-buttons">
+                        <button class="btn btn-outline-primary active" onclick="setTimeRange(7)" disabled>7
+                            Days</button>
+                        <button class="btn btn-outline-primary" onclick="setTimeRange(30)" disabled>30 Days</button>
+                        <button class="btn btn-outline-primary" onclick="setTimeRange(90)" disabled>90 Days</button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -277,6 +278,9 @@
     function renderSiteMemory(data) {
         // Show overview stats
         document.getElementById('overview-stats').style.display = 'flex';
+
+        // Enable time range buttons
+        document.querySelectorAll('#time-range-buttons button').forEach(btn => btn.disabled = false);
 
         const memory = data.memory;
 

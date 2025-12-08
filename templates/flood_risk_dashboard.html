@@ -78,6 +78,37 @@
     </div>
 </div>
 
+<!-- Site Details Modal -->
+<div class="modal fade" id="siteDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" id="modal-header-bg">
+                <h5 class="modal-title" id="modal-site-name">Site Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div id="modal-risk-badge" class="badge fs-5 px-3 py-2 mb-2"></div>
+                    <div class="display-4 fw-bold" id="modal-risk-score">--%</div>
+                    <small class="text-muted">Confidence Score</small>
+                </div>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6><i class="bi bi-lightbulb me-2"></i>AI Explanations</h6>
+                        <ul class="mb-0" id="modal-explanations"></ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="modal-view-site" class="btn btn-primary">
+                    <i class="bi bi-graph-up me-1"></i>View History
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .site-card {
         transition: transform 0.2s;
@@ -152,7 +183,7 @@
             const riskIcon = getRiskIcon(site.risk_category);
 
             html += `
-            <div class="col-md-6 mb-3">
+            <div class="col-md-6 col-lg-4 mb-3">
                 <div class="card site-card border-${riskClass}" onclick="showSiteDetails(${site.monitoring_site_id})">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start">
@@ -229,47 +260,28 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(`${data.site_name}\n\nRisk: ${data.risk_category}\nScore: ${(data.risk_score * 100).toFixed(0)}%\n\n${data.explanations.join('\n')}`);
+                    // Populate modal
+                    const riskClass = getRiskClass(data.risk_category);
+                    const riskIcon = getRiskIcon(data.risk_category);
+
+                    document.getElementById('modal-site-name').textContent = data.site_name;
+                    document.getElementById('modal-header-bg').className = `modal-header bg-${riskClass} text-white`;
+                    document.getElementById('modal-risk-badge').innerHTML = `<i class="bi ${riskIcon} me-1"></i>${data.risk_category}`;
+                    document.getElementById('modal-risk-badge').className = `badge bg-${riskClass} fs-5 px-3 py-2 mb-2`;
+                    document.getElementById('modal-risk-score').textContent = `${(data.risk_score * 100).toFixed(0)}%`;
+
+                    // Build explanations list
+                    const expList = document.getElementById('modal-explanations');
+                    expList.innerHTML = data.explanations.map(exp => `<li>${exp}</li>`).join('');
+
+                    // Set view site link  
+                    document.getElementById('modal-view-site').href = `/river-memory?site=${siteId}`;
+
+                    // Show modal
+                    const modal = new bootstrap.Modal(document.getElementById('siteDetailsModal'));
+                    modal.show();
                 }
             });
-    }
-
-    function sendChatMessage() {
-        const input = document.getElementById('chat-input');
-        const message = input.value.trim();
-
-        if (!message) return;
-
-        // Add user message
-        addChatMessage(message, 'user');
-        input.value = '';
-
-        // Send to API
-        fetch('/api/jalscan-gpt/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    addChatMessage(data.response, 'bot');
-                } else {
-                    addChatMessage('Sorry, I encountered an error.', 'bot');
-                }
-            })
-            .catch(error => {
-                addChatMessage('Network error. Please try again.', 'bot');
-            });
-    }
-
-    function addChatMessage(text, type) {
-        const container = document.getElementById('chat-messages');
-        const div = document.createElement('div');
-        div.className = `chat-message chat-${type}`;
-        div.innerHTML = text.replace(/\n/g, '<br>').replace(/\*/g, '');
-        container.appendChild(div);
-        container.scrollTop = container.scrollHeight;
     }
 
     function showError(message) {

@@ -13,6 +13,56 @@
         </div>
     </div>
 
+    <!-- Search & Filter Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body py-3">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                <input type="text" id="search-input" class="form-control"
+                                    placeholder="Search by site name..." onkeyup="filterSubmissions()">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="filter-status" class="form-select" onchange="filterSubmissions()">
+                                <option value="">All Status</option>
+                                <option value="synced">Synced</option>
+                                <option value="pending">Pending</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="filter-quality" class="form-select" onchange="filterSubmissions()">
+                                <option value="">All Quality</option>
+                                <option value="5">★★★★★</option>
+                                <option value="4">★★★★☆</option>
+                                <option value="3">★★★☆☆</option>
+                                <option value="2">★★☆☆☆</option>
+                                <option value="1">★☆☆☆☆</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="filter-date" class="form-select" onchange="filterSubmissions()">
+                                <option value="">All Time</option>
+                                <option value="7">Last 7 Days</option>
+                                <option value="30">Last 30 Days</option>
+                                <option value="90">Last 90 Days</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% if submissions %}
     <div class="row">
         {% for submission in submissions %}
@@ -243,6 +293,88 @@
             console.error('Delete error:', error);
             alert('Failed to delete submission. Please try again.');
         }
+    }
+
+    // Filter Functionality
+    function filterSubmissions() {
+        const searchTerm = document.getElementById('search-input').value.toLowerCase();
+        const statusFilter = document.getElementById('filter-status').value;
+        const qualityFilter = document.getElementById('filter-quality').value;
+        const dateFilter = document.getElementById('filter-date').value;
+
+        const cards = document.querySelectorAll('[id^="submission-card-"]');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            let show = true;
+
+            // Search filter
+            if (searchTerm) {
+                const siteName = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+                if (!siteName.includes(searchTerm)) {
+                    show = false;
+                }
+            }
+
+            // Status filter
+            if (statusFilter) {
+                const statusBadge = card.querySelector('.badge.bg-success, .badge.bg-warning, .badge.bg-danger');
+                const status = statusBadge?.textContent.trim().toLowerCase() || '';
+                if (!status.includes(statusFilter)) {
+                    show = false;
+                }
+            }
+
+            // Quality filter (check star ratings)
+            if (qualityFilter) {
+                const stars = card.querySelectorAll('.bi-star-fill').length;
+                if (stars < parseInt(qualityFilter)) {
+                    show = false;
+                }
+            }
+
+            // Date filter
+            if (dateFilter) {
+                const dateText = card.querySelector('strong')?.textContent || '';
+                const cardDate = new Date(dateText);
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - parseInt(dateFilter));
+
+                if (cardDate < cutoffDate) {
+                    show = false;
+                }
+            }
+
+            // Apply visibility
+            card.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+
+        // Show/hide no results message
+        let noResults = document.getElementById('no-filter-results');
+        if (visibleCount === 0) {
+            if (!noResults) {
+                noResults = document.createElement('div');
+                noResults.id = 'no-filter-results';
+                noResults.className = 'col-12 text-center py-5';
+                noResults.innerHTML = `
+                    <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No submissions match your filters</p>
+                    <button class="btn btn-outline-primary btn-sm" onclick="clearFilters()">Clear Filters</button>
+                `;
+                document.querySelector('.row:has(.submission-card)')?.appendChild(noResults);
+            }
+        } else if (noResults) {
+            noResults.remove();
+        }
+    }
+
+    function clearFilters() {
+        document.getElementById('search-input').value = '';
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-quality').value = '';
+        document.getElementById('filter-date').value = '';
+        filterSubmissions();
     }
 </script>
 {% endblock %}
