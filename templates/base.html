@@ -187,10 +187,50 @@
                     <i class="bi bi-list-check d-block"></i>
                     <small>Submissions</small>
                 </a>
-                <a class="nav-link text-center text-white" href="{{ url_for('qr_generator') }}">
-                    <i class="bi bi-qr-code d-block"></i>
-                    <small>QR Codes</small>
-                </a>
+
+                <!-- More Menu Dropdown for Additional Options -->
+                <div class="nav-item dropup">
+                    <a class="nav-link text-center text-white dropdown-toggle" href="#" role="button"
+                        id="mobileMoreDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-grid-3x3-gap d-block"></i>
+                        <small>More</small>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark mobile-bottom-dropdown"
+                        aria-labelledby="mobileMoreDropdown">
+                        {% if current_user.role in ['supervisor', 'admin', 'central_analyst'] %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('cloud_dashboard') }}">
+                                <i class="bi bi-cloud-fill me-2"></i>Cloud Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('admin_tamper_detection') }}">
+                                <i class="bi bi-shield-check me-2"></i>Tamper Detection
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('admin_public_submissions') }}">
+                                <i class="bi bi-globe me-2"></i>Public Submissions
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('ai_call_reporting') }}">
+                                <i class="bi bi-telephone me-2"></i>AI Call Reporting
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('analytics') }}">
+                                <i class="bi bi-graph-up me-2"></i>Analytics
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('qr_generator') }}">
+                                <i class="bi bi-qr-code me-2"></i>QR Generator
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
                 <!-- Profile/Logout Mobile Link -->
                 <div class="nav-item dropdown">
