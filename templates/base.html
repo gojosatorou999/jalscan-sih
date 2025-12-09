@@ -125,6 +125,12 @@
                     <i class="bi bi-cpu"></i>
                     <span class="nav-text">River Memory AI</span>
                 </a>
+
+                <a href="{{ url_for('flood_synthesis') }}"
+                    class="sidebar-nav-item {{ 'active' if request.endpoint == 'flood_synthesis' }}">
+                    <i class="bi bi-globe-americas"></i>
+                    <span class="nav-text">Flood Synthesis</span>
+                </a>
                 {% endif %}
             </div>
 
@@ -377,6 +383,11 @@
                         <li>
                             <a class="dropdown-item" href="{{ url_for('river_memory_dashboard') }}">
                                 <i class="bi bi-cpu me-2"></i>River Memory AI
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('flood_synthesis') }}">
+                                <i class="bi bi-globe-americas me-2"></i>Flood Synthesis
                             </a>
                         </li>
                         <li>

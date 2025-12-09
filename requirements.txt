@@ -5,4 +5,8 @@ Werkzeug==2.3.7
 Pillow
 qrcode==7.4.2
 python-dotenv==1.0.0
-twilio==8.5.0google-generativeai==0.8.5
+twilio==8.5.0
+google-generativeai==0.8.5
+scipy
+numpy
+requests

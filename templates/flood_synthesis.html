@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Flood Satellite Synthesis - JalScan{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Page Header -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <div>
+                    <h3 class="fw-bold text-primary mb-1">
+                        <i class="bi bi-globe-americas me-2"></i>Flood Satellite Synthesis
+                    </h3>
+                    <p class="text-muted mb-0">Hybrid Physics + GAN-based flood visualization on satellite maps</p>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="badge bg-success" id="demoBadge">
+                        <i class="bi bi-check-circle me-1"></i>DEMO MODE
+                    </span>
+                    <button class="btn btn-outline-primary" onclick="refreshPage()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tech Stack Badges -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-2">
+                <span class="badge bg-info"><i class="bi bi-water me-1"></i>Manning's Equation</span>
+                <span class="badge" style="background-color: #6f42c1;"><i class="bi bi-robot me-1"></i>pix2pix
+                    GAN</span>
+                <span class="badge bg-secondary"><i class="bi bi-mountains me-1"></i>SRTM Elevation</span>
+                <span class="badge bg-warning text-dark"><i class="bi bi-map me-1"></i>Leaflet.js</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Control Panel -->
+        <div class="col-lg-4 col-md-5 mb-4">
+            <!-- Location Input Card -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Location</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Latitude</label>
+                        <input type="number" class="form-control" id="latitude" placeholder="e.g., 17.385" step="0.0001"
+                            value="17.385">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Longitude</label>
+                        <input type="number" class="form-control" id="longitude" placeholder="e.g., 78.486"
+                            step="0.0001" value="78.486">
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <label class="form-label">Water Level Rise</label>
+                            <span class="text-primary fw-bold" id="riseValue">2.0 m</span>
+                        </div>
+                        <input type="range" class="form-range" id="waterLevelRise" min="0.5" max="10" step="0.5"
+                            value="2.0">
+                    </div>
+                    <button class="btn btn-primary w-100" id="predictBtn" onclick="runPrediction()">
+                        <i class="bi bi-magic me-1"></i>Generate Flood Map
+                    </button>
+                </div>
+            </div>
+
+            <!-- Demo Scenarios Card -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-pin-map me-2"></i>Demo Scenarios</h6>
+                </div>
+                <div class="card-body">
+                    <div id="scenarioGrid">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span class="text-muted ms-2">Loading scenarios...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Card -->
+            <div class="card shadow-sm" id="statsCard" style="display: none;">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Flood Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="bg-light rounded p-2 text-center">
+                                <h5 class="text-primary mb-0" id="statArea">--</h5>
+                                <small class="text-muted">Flooded Area (km²)</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-light rounded p-2 text-center">
+                                <h5 class="text-primary mb-0" id="statPercent">--</h5>
+                                <small class="text-muted">Flooded (%)</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-light rounded p-2 text-center">
+                                <h5 class="text-danger mb-0" id="statMaxDepth">--</h5>
+                                <small class="text-muted">Max Depth (m)</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-light rounded p-2 text-center">
+                                <h5 class="text-warning mb-0" id="statMeanDepth">--</h5>
+                                <small class="text-muted">Mean Depth (m)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="col-lg-8 col-md-7 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-globe me-2"></i>Satellite View with Flood Overlay</h6>
+                </div>
+                <div class="card-body p-0 position-relative">
+                    <div id="map" style="height: 550px; border-radius: 0 0 0.375rem 0.375rem;"></div>
+
+                    <!-- Loading Overlay -->
+                    <div class="position-absolute top-0 start-0 w-100 h-100 d-none justify-content-center align-items-center"
+                        id="loadingOverlay"
+                        style="background: rgba(0,0,0,0.5); z-index: 1000; border-radius: 0 0 0.375rem 0.375rem;">
+                        <div class="text-center text-white">
+                            <div class="spinner-border mb-2" role="status"></div>
+                            <p class="mb-0">Running physics simulation...</p>
+                        </div>
+                    </div>
+
+                    <!-- Map Legend -->
+                    <div class="position-absolute bg-white shadow-sm rounded p-2"
+                        style="bottom: 15px; right: 15px; z-index: 500;">
+                        <small class="fw-bold d-block mb-1">Legend</small>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <div
+                                style="width: 16px; height: 16px; background: rgba(65, 105, 225, 0.7); border-radius: 3px;">
+                            </div>
+                            <small>Flooded Area</small>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width: 16px; height: 16px; background: #28a745; border-radius: 3px;"></div>
+                            <small>Selected Location</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %}
+
+{% block scripts %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // Global variables
+    let map;
+    let marker;
+    let floodOverlay;
+    let currentScenario = null;
+
+    // Initialize map
+    function initMap() {
+        map = L.map('map').setView([17.385, 78.486], 12);
+
+        // Add satellite tile layer
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Add click handler for location selection
+        map.on('click', onMapClick);
+
+        // Initial marker
+        marker = L.marker([17.385, 78.486], {
+            draggable: true,
+            icon: L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background: #28a745; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(map);
+
+        marker.on('dragend', onMarkerDrag);
+    }
+
+    // Handle map click
+    function onMapClick(e) {
+        const { lat, lng } = e.latlng;
+        marker.setLatLng([lat, lng]);
+        document.getElementById('latitude').value = lat.toFixed(4);
+        document.getElementById('longitude').value = lng.toFixed(4);
+    }
+
+    // Handle marker drag
+    function onMarkerDrag(e) {
+        const { lat, lng } = e.target.getLatLng();
+        document.getElementById('latitude').value = lat.toFixed(4);
+        document.getElementById('longitude').value = lng.toFixed(4);
+    }
+
+    // Update range slider value display
+    document.getElementById('waterLevelRise').addEventListener('input', function () {
+        document.getElementById('riseValue').textContent = this.value + ' m';
+    });
+
+    // Load demo scenarios
+    async function loadScenarios() {
+        try {
+            const response = await fetch('/api/flood/demo');
+            const data = await response.json();
+
+            if (data.success) {
+                const grid = document.getElementById('scenarioGrid');
+                grid.innerHTML = data.scenarios.map(scenario => `
+                    <div class="list-group-item list-group-item-action scenario-btn" 
+                         onclick="selectScenario('${scenario.id}', ${scenario.lat}, ${scenario.lon}, this)"
+                         style="cursor: pointer;">
+                        <div class="fw-bold">${scenario.name}</div>
+                        <small class="text-muted">${scenario.description}</small>
+                    </div>
+                `).join('');
+
+                // Update demo mode badge
+                document.getElementById('demoBadge').style.display = data.demo_mode ? 'inline-flex' : 'none';
+            }
+        } catch (error) {
+            console.error('Failed to load scenarios:', error);
+            document.getElementById('scenarioGrid').innerHTML = '<div class="text-center text-muted py-3">Failed to load scenarios</div>';
+        }
+    }
+
+    // Select a demo scenario
+    function selectScenario(id, lat, lon, btn) {
+        // Update form
+        document.getElementById('latitude').value = lat;
+        document.getElementById('longitude').value = lon;
+
+        // Update map
+        map.setView([lat, lon], 13);
+        marker.setLatLng([lat, lon]);
+
+        // Highlight selected button
+        document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        currentScenario = id;
+
+        // Show alert
+        if (typeof showGlobalAlert === 'function') {
+            showGlobalAlert(`Selected: ${btn.querySelector('.fw-bold').textContent}`, 'info');
+        }
+    }
+
+    // Run flood prediction
+    async function runPrediction() {
+        const lat = parseFloat(document.getElementById('latitude').value);
+        const lon = parseFloat(document.getElementById('longitude').value);
+        const waterLevelRise = parseFloat(document.getElementById('waterLevelRise').value);
+
+        if (isNaN(lat) || isNaN(lon)) {
+            if (typeof showGlobalAlert === 'function') {
+                showGlobalAlert('Please enter valid coordinates', 'warning');
+            }
+            return;
+        }
+
+        // Show loading
+        const btn = document.getElementById('predictBtn');
+        const overlay = document.getElementById('loadingOverlay');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+        overlay.classList.remove('d-none');
+        overlay.classList.add('d-flex');
+
+        try {
+            const response = await fetch('/api/flood/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lat, lon, water_level_rise: waterLevelRise })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Display flood overlay on map
+                displayFloodOverlay(data.image_url, data.overlay_bounds);
+
+                // Update statistics
+                updateStatistics(data.statistics);
+
+                if (typeof showGlobalAlert === 'function') {
+                    showGlobalAlert('Flood prediction generated successfully!', 'success');
+                }
+            } else {
+                if (typeof showGlobalAlert === 'function') {
+                    showGlobalAlert(data.error || 'Prediction failed', 'danger');
+                }
+            }
+        } catch (error) {
+            console.error('Prediction error:', error);
+            if (typeof showGlobalAlert === 'function') {
+                showGlobalAlert('Failed to generate prediction', 'danger');
+            }
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-magic me-1"></i>Generate Flood Map';
+            overlay.classList.add('d-none');
+            overlay.classList.remove('d-flex');
+        }
+    }
+
+    // Display flood overlay on map
+    function displayFloodOverlay(imageUrl, bounds) {
+        // Remove existing overlay
+        if (floodOverlay) {
+            map.removeLayer(floodOverlay);
+        }
+
+        // Create image overlay bounds
+        const imageBounds = [
+            [bounds.south, bounds.west],
+            [bounds.north, bounds.east]
+        ];
+
+        // Add the flood image as an overlay
+        floodOverlay = L.imageOverlay(imageUrl, imageBounds, {
+            opacity: 0.7,
+            interactive: false
+        }).addTo(map);
+
+        // Fit map to overlay bounds
+        map.fitBounds(imageBounds, { padding: [30, 30] });
+    }
+
+    // Update statistics display
+    function updateStatistics(stats) {
+        document.getElementById('statsCard').style.display = 'block';
+        document.getElementById('statArea').textContent = stats.flooded_area_km2 || '--';
+        document.getElementById('statPercent').textContent = (stats.flooded_percentage || '--') + '%';
+        document.getElementById('statMaxDepth').textContent = stats.max_depth_m || '--';
+        document.getElementById('statMeanDepth').textContent = stats.mean_depth_m || '--';
+    }
+
+    // Refresh page
+    function refreshPage() {
+        location.reload();
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        initMap();
+        loadScenarios();
+    });
+</script>
+
+<style>
+    .scenario-btn.active {
+        background-color: #e3f2fd;
+        border-left: 3px solid #0d6efd;
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

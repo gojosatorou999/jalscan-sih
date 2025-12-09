@@ -53,6 +53,10 @@ def create_app(config_name='default'):
     # Register blueprints
     app.register_blueprint(auth_bp)
     
+    # Register flood synthesis module
+    from flood_synthesis import flood_bp
+    app.register_blueprint(flood_bp)
+    
     # Initialize services
     sync_service = SyncService(app)
     tamper_engine = TamperDetectionEngine(app)  # Initialize tamper detection
@@ -2847,6 +2851,12 @@ def create_app(config_name='default'):
         """Render River Memory AI Dashboard - Digital Twin"""
         sites = MonitoringSite.query.filter_by(is_active=True).all()
         return render_template('river_memory_dashboard.html', sites=sites)
+
+    @app.route('/flood-synthesis')
+    def flood_synthesis():
+        """Render Flood Satellite Synthesis page - GAN-based visualization"""
+        return render_template('flood_synthesis.html')
+
 
     @app.route('/api/river-memory/site/<int:site_id>')
     @login_required
