@@ -95,7 +95,7 @@
             data.forEach(site => {
                 // Add marker
                 const markerColor = getMarkerColor(site.risk_level);
-                const markerHtml = `<div style="background-color: ${markerColor}; width: 15px; height: 15px; border-radius: 50%; border: 2px solid white;"></div>`;
+                const markerHtml = `<div style="background-color: ${markerColor}; width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--bg-surface);"></div>`;
 
                 const icon = L.divIcon({
                     className: 'custom-marker',
@@ -170,8 +170,8 @@
     }
 
     function getWeatherCondition(rainfall) {
-        if (rainfall <= 0.5) return '<span class="badge bg-light text-dark"><i class="bi bi-sun"></i> Clear/Cloudy</span>';
-        if (rainfall <= 2.5) return '<span class="badge bg-info text-dark"><i class="bi bi-cloud-drizzle"></i> Light Rain</span>';
+        if (rainfall <= 0.5) return '<span class="badge bg-light"><i class="bi bi-sun"></i> Clear/Cloudy</span>';
+        if (rainfall <= 2.5) return '<span class="badge bg-info"><i class="bi bi-cloud-drizzle"></i> Light Rain</span>';
         if (rainfall <= 10) return '<span class="badge bg-primary"><i class="bi bi-cloud-rain"></i> Moderate Rain</span>';
         if (rainfall <= 50) return '<span class="badge bg-primary"><i class="bi bi-cloud-lightning-rain"></i> Heavy Rain</span>';
         return '<span class="badge bg-danger"><i class="bi bi-cloud-lightning-rain-fill"></i> Severe Storm</span>';
@@ -187,11 +187,12 @@
     }
 
     function getMarkerColor(level) {
+        const style = getComputedStyle(document.documentElement);
         switch (level) {
-            case 'critical': return '#dc3545'; // Red
-            case 'high': return '#fd7e14'; // Orange
-            case 'medium': return '#ffc107'; // Yellow
-            default: return '#28a745'; // Green
+            case 'critical': return style.getPropertyValue('--brand-danger').trim() || '#EF4444';
+            case 'high': return style.getPropertyValue('--brand-warning').trim() || '#F59E0B';
+            case 'medium': return style.getPropertyValue('--brand-info').trim() || '#06B6D4';
+            default: return style.getPropertyValue('--brand-success').trim() || '#10B981';
         }
     }
 

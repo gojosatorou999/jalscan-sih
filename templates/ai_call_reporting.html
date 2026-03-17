@@ -21,8 +21,8 @@
         <!-- Call Controls -->
         <div class="col-md-6">
             <div class="card mb-4">
-                <div class="card-header" style="background: linear-gradient(135deg, #6f42c1, #8c68d6); color: white;">
-                    <h5 class="mb-0"><i class="bi bi-telephone-fill"></i> Voice Call Reporting</h5>
+                <div class="card-header bg-primary">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-telephone-fill me-2"></i>Voice Call Reporting</h5>
                 </div>
                 <div class="card-body">
                     <p class="text-muted">Voice call reports are automatically synced from the external AI call agent.
@@ -70,8 +70,8 @@
         <!-- Voice Submissions -->
         <div class="col-md-6">
             <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-mic-fill"></i> Recent Voice Submissions</h5>
+                <div class="card-header bg-success">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-mic-fill me-2"></i>Recent Voice Submissions</h5>
                 </div>
                 <div class="card-body" style="max-height: 500px; overflow-y: auto;">
                     {% if voice_submissions %}
@@ -120,7 +120,7 @@
                         <div class="col-md-4">
                             <div class="d-flex align-items-center">
                                 <span class="status-indicator bg-success me-2"
-                                    style="width: 10px; height: 10px; border-radius: 50%; display: inline-block;"></span>
+                                    style="width: 10px; height: 10px; border-radius: 50%; display: inline-block; background-color: var(--success) !important;"></span>
                                 <span>Twilio Voice: Active</span>
                             </div>
                         </div>

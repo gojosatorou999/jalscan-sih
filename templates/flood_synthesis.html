@@ -1,642 +1,299 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h4 class="card-title mb-1"><i class="bi bi-water"></i> <span data-i18n="flood_synthesis">Flood
-                            Satellite Synthesis</span></h4>
-                    <p class="mb-0" data-i18n="flood_synthesis_desc">Hybrid Physics + AI-based flood visualization on
-                        satellite maps</p>
+<div class="mb-4 d-flex justify-content-between align-items-end">
+    <div>
+        <h1 class="h4 fw-bold mb-1">Hybrid Physics Simulation Center</h1>
+        <p class="text-secondary small">Satellite-link derived hydrology visualization and risk vector modeling.</p>
+    </div>
+    <div id="status-pill" class="badge bg-primary bg-opacity-10 text-primary border px-3 py-2">
+        <i class="bi bi-cpu me-2"></i> READY FOR SYNTHESIS
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Analysis Controls -->
+    <div class="col-lg-4">
+        <!-- Site Selection & GPS -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent py-3">
+                <h6 class="mb-0 fw-bold">Primary Parameters</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <label class="text-xs text-uppercase text-secondary fw-bold mb-2 d-block">Target station</label>
+                    <select class="form-select bg-light border-0" id="siteSelector">
+                        <option value="">Awaiting Node Selection...</option>
+                    </select>
                 </div>
+
+                <div id="coordinate-matrix" class="p-3 bg-light rounded-4 mb-4 border">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="text-xs text-muted mb-1">LATITUDE</label>
+                            <input type="number"
+                                class="form-control form-control-sm bg-transparent border-0 fw-bold px-0" id="latitude"
+                                value="17.3850" step="0.0001">
+                        </div>
+                        <div class="col-6 border-start ps-3">
+                            <label class="text-xs text-muted mb-1">LONGITUDE</label>
+                            <input type="number"
+                                class="form-control form-control-sm bg-transparent border-0 fw-bold px-0" id="longitude"
+                                value="78.4867" step="0.0001">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <label class="text-xs text-uppercase text-secondary fw-bold">Volume Scale (Δh)</label>
+                        <span class="badge bg-primary bg-opacity-10 text-primary" id="waterLevelValue">2.0m</span>
+                    </div>
+                    <input type="range" class="form-range" id="waterLevelRise" min="0.5" max="10" step="0.5" value="2">
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <label class="text-xs text-uppercase text-secondary fw-bold">Temporal Horizon</label>
+                        <span class="badge bg-info bg-opacity-10 text-info" id="hoursAheadValue">24h</span>
+                    </div>
+                    <input type="range" class="form-range" id="hoursAhead" min="6" max="72" step="6" value="24">
+                </div>
+
+                <button id="generateBtn" class="btn btn-primary w-100 py-3 fw-bold rounded-4 mb-2 shadow-sm">
+                    <i class="bi bi-play-fill me-2"></i> INITIALIZE SIMULATION
+                </button>
+                <button id="predictFromSiteBtn" class="btn btn-outline-secondary w-100 py-2 text-xs fw-bold rounded-3"
+                    disabled>
+                    <i class="bi bi-graph-up-arrow me-2"></i> SYNC READINGS & PREDICT
+                </button>
+            </div>
+        </div>
+
+        <!-- Risk Thresholds -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3 text-center mb-4">
+                    <div class="col-6">
+                        <div class="text-xs text-secondary fw-bold">RISE RATE</div>
+                        <div class="h4 fw-bold mb-0 text-info" id="rateOfRise">--</div>
+                        <div class="text-xs opacity-50">m/hr</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-xs text-secondary fw-bold">DANGER LVL</div>
+                        <div class="h4 fw-bold mb-0 text-danger" id="dangerLevel">--</div>
+                        <div class="text-xs opacity-50">meters</div>
+                    </div>
+                </div>
+                <div id="severityAlert" class="alert border-0 rounded-4 p-3 mb-0 text-center d-none">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span id="severityMessage" class="fw-bold small">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Regional Scenarios -->
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-transparent py-3">
+                <h6 class="mb-0 fw-bold">Strategic Basins</h6>
+            </div>
+            <div class="list-group list-group-flush" id="scenarioList" style="max-height: 240px; overflow-y: auto;">
+                <!-- Populated by JS -->
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Control Panel -->
-        <div class="col-lg-4">
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-geo-alt"></i> <span data-i18n="location">Location</span></h6>
-                </div>
-                <div class="card-body">
-                    <!-- Site Selector -->
-                    <div class="mb-3">
-                        <label for="siteSelector" class="form-label"><i class="bi bi-pin-map"></i> Select Monitoring
-                            Site</label>
-                        <select class="form-select" id="siteSelector">
-                            <option value="">-- Select a Site --</option>
-                        </select>
-                    </div>
-
-                    <hr class="my-3">
-
-                    <div class="alert alert-info py-2 mb-3">
-                        <i class="bi bi-hand-index-thumb"></i> <small data-i18n="click_map_hint">Click on the map to
-                            select a location</small>
-                    </div>
-                    <div class="mb-3">
-                        <label for="latitude" class="form-label" data-i18n="latitude">Latitude</label>
-                        <input type="number" class="form-control" id="latitude" value="17.3850" step="0.0001">
-                    </div>
-                    <div class="mb-3">
-                        <label for="longitude" class="form-label" data-i18n="longitude">Longitude</label>
-                        <input type="number" class="form-control" id="longitude" value="78.4867" step="0.0001">
-                    </div>
-                    <div class="mb-3">
-                        <label for="waterLevelRise" class="form-label" data-i18n="water_level_rise">Water Level Rise
-                            (meters)</label>
-                        <input type="range" class="form-range" id="waterLevelRise" min="0.5" max="10" step="0.5"
-                            value="2">
-                        <div class="text-center"><span id="waterLevelValue">2.0</span> m</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="hoursAhead" class="form-label"><i class="bi bi-clock-history"></i> Prediction Hours
-                            Ahead</label>
-                        <input type="range" class="form-range" id="hoursAhead" min="6" max="72" step="6" value="24">
-                        <div class="text-center"><span id="hoursAheadValue">24</span> hours</div>
-                    </div>
-                    <button id="generateBtn" class="btn btn-primary w-100 mb-2">
-                        <i class="bi bi-play-fill"></i> <span data-i18n="generate_flood">Generate Flood
-                            Simulation</span>
-                    </button>
-                    <button id="predictFromSiteBtn" class="btn btn-outline-primary w-100" disabled>
-                        <i class="bi bi-graph-up-arrow"></i> Predict from Site Data
-                    </button>
+    <!-- Map Stage -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm overflow-hidden h-100">
+            <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">Visual Synthesis Stage</h6>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-light text-dark border px-2 py-1 text-xs" id="coordsDisplay">17.3850,
+                        78.4867</span>
+                    <span
+                        class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 text-xs"
+                        id="statusBadge">LIVE</span>
                 </div>
             </div>
+            <div class="card-body p-0 position-relative" style="min-height: 600px;">
+                <div id="loadingOverlay"
+                    class="d-none position-absolute w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75"
+                    style="z-index: 1000;">
+                    <div class="text-center text-white">
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <div class="fw-bold letter-spacing-lg">RUNNING PHYSICS MODEL...</div>
+                    </div>
+                </div>
+                <!-- Leaflet Map Container -->
+                <div id="floodMap" class="h-100 w-100"></div>
 
-            <!-- Rate of Rise & Thresholds Card -->
-            <div class="card mb-3">
-                <div class="card-header bg-warning bg-opacity-25">
-                    <h6 class="mb-0"><i class="bi bi-graph-up"></i> Rate of Rise & Thresholds</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6 mb-2">
-                            <div class="fs-5 fw-bold text-info" id="rateOfRise">--</div>
-                            <small class="text-muted">Rate (m/hr)</small>
+                <!-- Floating Stats Overlay -->
+                <div class="position-absolute bottom-0 start-0 m-4 p-4 bg-white bg-opacity-75 blur rounded-4 shadow-lg border"
+                    style="z-index: 900; backdrop-filter: blur(8px);">
+                    <div class="row g-4">
+                        <div class="col-auto">
+                            <div class="text-xs text-secondary fw-bold">FLOOD AREA</div>
+                            <div class="h5 fw-bold mb-0 text-primary" id="statArea">--</div>
+                            <small class="text-xs text-muted">km²</small>
                         </div>
-                        <div class="col-6 mb-2">
-                            <div class="fs-5 fw-bold text-primary" id="predictedDelta">--</div>
-                            <small class="text-muted">Δh Predicted</small>
+                        <div class="col-auto border-start ps-4">
+                            <div class="text-xs text-secondary fw-bold">MAX DEPTH</div>
+                            <div class="h5 fw-bold mb-0 text-danger" id="statMaxDepth">--</div>
+                            <small class="text-xs text-muted">meters</small>
                         </div>
-                        <div class="col-6">
-                            <div class="fs-5 fw-bold text-warning" id="warningLevel">--</div>
-                            <small class="text-muted">Warning (m)</small>
-                        </div>
-                        <div class="col-6">
-                            <div class="fs-5 fw-bold text-danger" id="dangerLevel">--</div>
-                            <small class="text-muted">Danger (m)</small>
+                        <div class="col-auto border-start ps-4">
+                            <div class="text-xs text-secondary fw-bold">POP. AT RISK</div>
+                            <div class="h5 fw-bold mb-0 text-warning" id="statPercent">--</div>
+                            <small class="text-xs text-muted">estimate</small>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <div class="alert py-2 mb-0" id="severityAlert" style="display: none;">
-                            <strong id="severityMessage">--</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-water"></i> <span data-i18n="indian_rivers">Indian Rivers</span>
-                    </h6>
-                </div>
-                <div class="card-body p-0" style="max-height: 300px; overflow-y: auto;">
-                    <div class="list-group list-group-flush" id="scenarioList">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-bar-chart"></i> <span data-i18n="flood_statistics">Flood
-                            Statistics</span></h6>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6 mb-3">
-                            <div class="text-primary fs-4 fw-bold" id="statArea">--</div>
-                            <small class="text-muted" data-i18n="flooded_area">Flooded Area (km²)</small>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <div class="text-warning fs-4 fw-bold" id="statPercent">--</div>
-                            <small class="text-muted" data-i18n="flooded_percent">Flooded %</small>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-danger fs-4 fw-bold" id="statMaxDepth">--</div>
-                            <small class="text-muted" data-i18n="max_depth">Max Depth (m)</small>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-info fs-4 fw-bold" id="statMeanDepth">--</div>
-                            <small class="text-muted" data-i18n="mean_depth">Mean Depth (m)</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Map/Visualization Panel -->
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0"><i class="bi bi-map"></i> <span data-i18n="satellite_map">Satellite Map with Flood
-                            Overlay</span></h6>
-                    <div>
-                        <span class="badge bg-secondary me-2" id="coordsDisplay">17.3850, 78.4867</span>
-                        <span class="badge bg-info" id="statusBadge" data-i18n="ready">Ready</span>
-                    </div>
-                </div>
-                <div class="card-body p-0 position-relative" style="height: 550px;">
-                    <div id="loadingOverlay"
-                        class="d-none position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
-                        style="background: rgba(0,0,0,0.7); z-index: 1000;">
-                        <div class="text-center text-white">
-                            <div class="spinner-border text-primary mb-2" role="status"></div>
-                            <div data-i18n="running_simulation">Running physics simulation...</div>
-                        </div>
-                    </div>
-                    <!-- Leaflet Map Container -->
-                    <div id="floodMap" style="height: 100%; width: 100%; cursor: crosshair;"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Leaflet CSS -->
+<style>
+    .blur {
+        backdrop-filter: blur(8px);
+    }
+
+    .letter-spacing-lg {
+        letter-spacing: 0.1em;
+    }
+
+    #floodMap {
+        cursor: crosshair;
+    }
+
+    .river-marker i {
+        transition: transform 0.2s;
+    }
+
+    .river-marker:hover i {
+        transform: scale(1.3);
+    }
+
+    .form-range::-webkit-slider-thumb {
+        background: var(--accent-blue);
+    }
+
+    .list-group-item {
+        transition: background 0.2s;
+        border-left: 2px solid transparent;
+    }
+
+    .list-group-item:hover {
+        background: var(--bg-primary) !important;
+        border-left-color: var(--accent-blue);
+    }
+</style>
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 {% endblock %}
 
 {% block scripts %}
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
+    // PRESERVING ORIGINAL LOGIC - UPDATING SELECTORS
     document.addEventListener('DOMContentLoaded', function () {
-        const latInput = document.getElementById('latitude');
-        const lonInput = document.getElementById('longitude');
-        const waterLevelSlider = document.getElementById('waterLevelRise');
-        const waterLevelValue = document.getElementById('waterLevelValue');
-        const generateBtn = document.getElementById('generateBtn');
-        const scenarioList = document.getElementById('scenarioList');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const statusBadge = document.getElementById('statusBadge');
-        const coordsDisplay = document.getElementById('coordsDisplay');
+        const latInput = document.getElementById('latitude'), lonInput = document.getElementById('longitude'), waterLevelSlider = document.getElementById('waterLevelRise'), waterLevelValue = document.getElementById('waterLevelValue'), generateBtn = document.getElementById('generateBtn'), scenarioList = document.getElementById('scenarioList'), loadingOverlay = document.getElementById('loadingOverlay'), statusBadge = document.getElementById('statusBadge'), coordsDisplay = document.getElementById('coordsDisplay');
+        const hoursSlider = document.getElementById('hoursAhead'), hoursValue = document.getElementById('hoursAheadValue'), siteSelector = document.getElementById('siteSelector'), predictFromSiteBtn = document.getElementById('predictFromSiteBtn'), rateOfRiseEl = document.getElementById('rateOfRise'), predictedDeltaEl = document.getElementById('predictedDelta'), warningLevelEl = document.getElementById('warningLevel'), dangerLevelEl = document.getElementById('dangerLevel'), severityAlert = document.getElementById('severityAlert'), severityMessage = document.getElementById('severityMessage');
 
-        // New elements
-        const hoursSlider = document.getElementById('hoursAhead');
-        const hoursValue = document.getElementById('hoursAheadValue');
-        const siteSelector = document.getElementById('siteSelector');
-        const predictFromSiteBtn = document.getElementById('predictFromSiteBtn');
-        const rateOfRiseEl = document.getElementById('rateOfRise');
-        const predictedDeltaEl = document.getElementById('predictedDelta');
-        const warningLevelEl = document.getElementById('warningLevel');
-        const dangerLevelEl = document.getElementById('dangerLevel');
-        const severityAlert = document.getElementById('severityAlert');
-        const severityMessage = document.getElementById('severityMessage');
-
-        let selectedSiteId = null;
-
-        // Initialize Leaflet Map centered on India
+        let selectedSiteId = null, floodOverlay = null, locationMarker = null, riverMarkers = [];
         const map = L.map('floodMap').setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { opacity: 0.4 }).addTo(map);
 
-        // Add satellite tile layer (using ESRI World Imagery)
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri',
-            maxZoom: 18
-        }).addTo(map);
+        waterLevelSlider.oninput = function () { waterLevelValue.textContent = parseFloat(this.value).toFixed(1) + 'm'; };
+        hoursSlider.oninput = function () { hoursValue.textContent = this.value + 'h'; };
 
-        // Add OpenStreetMap labels overlay
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            opacity: 0.3,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Flood overlay layer
-        let floodOverlay = null;
-        let locationMarker = null;
-        let riverMarkers = [];
-
-        // Update water level display
-        waterLevelSlider.addEventListener('input', function () {
-            waterLevelValue.textContent = parseFloat(this.value).toFixed(1);
-        });
-
-        // ==========================
-        // INTERACTIVE MAP CLICK
-        // ==========================
         map.on('click', function (e) {
-            const lat = e.latlng.lat.toFixed(4);
-            const lon = e.latlng.lng.toFixed(4);
-
-            // Update inputs
-            latInput.value = lat;
-            lonInput.value = lon;
-
-            // Update coordinate display
-            coordsDisplay.textContent = `${lat}, ${lon}`;
-
-            // Update marker
-            if (locationMarker) {
-                locationMarker.setLatLng(e.latlng);
-            } else {
-                locationMarker = L.marker(e.latlng, {
-                    draggable: true
-                }).addTo(map);
-
-                // Allow dragging to update location
-                locationMarker.on('dragend', function (event) {
-                    const position = event.target.getLatLng();
-                    latInput.value = position.lat.toFixed(4);
-                    lonInput.value = position.lng.toFixed(4);
-                    coordsDisplay.textContent = `${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}`;
-                });
-            }
-
-            locationMarker.bindPopup(`
-                <strong>Selected Location</strong><br>
-                Lat: ${lat}<br>
-                Lon: ${lon}<br>
-                <button class="btn btn-sm btn-primary mt-2" onclick="document.getElementById('generateBtn').click()">
-                    Generate Flood
-                </button>
-            `).openPopup();
+            const lat = e.latlng.lat.toFixed(4), lon = e.latlng.lng.toFixed(4);
+            latInput.value = lat; lonInput.value = lon; coordsDisplay.textContent = `${lat}, ${lon}`;
+            if (locationMarker) locationMarker.setLatLng(e.latlng);
+            else locationMarker = L.marker(e.latlng, { draggable: true }).addTo(map);
         });
 
-        // Update map when coordinates change manually
-        function updateMapView() {
-            const lat = parseFloat(latInput.value);
-            const lon = parseFloat(lonInput.value);
-            if (!isNaN(lat) && !isNaN(lon)) {
-                map.setView([lat, lon], 12);
-                coordsDisplay.textContent = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-                if (locationMarker) {
-                    locationMarker.setLatLng([lat, lon]);
-                } else {
-                    locationMarker = L.marker([lat, lon], { draggable: true }).addTo(map);
-                    locationMarker.on('dragend', function (event) {
-                        const position = event.target.getLatLng();
-                        latInput.value = position.lat.toFixed(4);
-                        lonInput.value = position.lng.toFixed(4);
-                        coordsDisplay.textContent = `${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}`;
-                    });
-                }
-            }
-        }
-
-        latInput.addEventListener('change', updateMapView);
-        lonInput.addEventListener('change', updateMapView);
-
-        // Load river scenarios and add markers to map
         async function loadScenarios() {
             try {
-                const response = await fetch('/api/flood/demo');
-                const data = await response.json();
-
-                if (data.success) {
-                    // Populate list
-                    scenarioList.innerHTML = data.scenarios.map(s => `
-                    <a href="#" class="list-group-item list-group-item-action scenario-item py-2" 
-                       data-lat="${s.lat}" data-lon="${s.lon}" data-id="${s.id}">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong class="small">${s.name}</strong>
-                                <small class="d-block text-muted text-truncate" style="max-width: 200px;">${s.description}</small>
+                const res = await (await fetch('/api/flood/demo')).json();
+                if (res.success) {
+                    scenarioList.innerHTML = res.scenarios.map(s => `
+                        <a href="#" class="list-group-item list-group-item-action scenario-item py-3 px-4 border-0" data-lat="${s.lat}" data-lon="${s.lon}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div><div class="fw-bold small">${s.name}</div><div class="text-xs text-muted">${s.description}</div></div>
+                                <i class="bi bi-water text-primary"></i>
                             </div>
-                            <i class="bi bi-water text-primary"></i>
-                        </div>
-                    </a>
-                `).join('');
-
-                    // Add river markers to map
-                    const riverIcon = L.divIcon({
-                        className: 'river-marker',
-                        html: '<i class="bi bi-water text-primary" style="font-size: 20px; text-shadow: 0 0 3px white;"></i>',
-                        iconSize: [24, 24],
-                        iconAnchor: [12, 12]
+                        </a>`).join('');
+                    const riverIcon = L.divIcon({ className: 'river-marker', html: '<i class="bi bi-geo-fill text-primary" style="font-size: 20px;"></i>', iconSize: [20, 20] });
+                    res.scenarios.forEach(s => {
+                        L.marker([s.lat, s.lon], { icon: riverIcon }).addTo(map).bindPopup(`<strong>${s.name}</strong><br><button class="btn btn-sm btn-primary mt-2" onclick="selectRiver(${s.lat}, ${s.lon})">Simulate Area</button>`);
                     });
-
-                    data.scenarios.forEach(s => {
-                        const marker = L.marker([s.lat, s.lon], { icon: riverIcon })
-                            .addTo(map)
-                            .bindPopup(`
-                                <strong>${s.name}</strong><br>
-                                <small>${s.description}</small><br>
-                                <button class="btn btn-sm btn-primary mt-2" 
-                                    onclick="selectRiver(${s.lat}, ${s.lon})">
-                                    Select & Simulate
-                                </button>
-                            `);
-                        riverMarkers.push(marker);
-                    });
-
-                    // Add click handlers to list items
-                    document.querySelectorAll('.scenario-item').forEach(item => {
-                        item.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            const lat = parseFloat(this.dataset.lat);
-                            const lon = parseFloat(this.dataset.lon);
-                            latInput.value = lat;
-                            lonInput.value = lon;
-                            map.setView([lat, lon], 12);
-                            coordsDisplay.textContent = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-
-                            if (locationMarker) {
-                                locationMarker.setLatLng([lat, lon]);
-                            } else {
-                                locationMarker = L.marker([lat, lon], { draggable: true }).addTo(map);
-                            }
-
-                            generateFlood();
-                        });
-                    });
+                    document.querySelectorAll('.scenario-item').forEach(i => i.onclick = (e) => { e.preventDefault(); selectRiver(i.dataset.lat, i.dataset.lon); });
                 }
-            } catch (error) {
-                console.error('Error loading scenarios:', error);
-            }
+            } catch (e) { }
         }
 
-        // Global function for marker popup button
         window.selectRiver = function (lat, lon) {
-            latInput.value = lat;
-            lonInput.value = lon;
-            map.setView([lat, lon], 12);
-            coordsDisplay.textContent = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-
-            if (locationMarker) {
-                locationMarker.setLatLng([lat, lon]);
-            } else {
-                locationMarker = L.marker([lat, lon], { draggable: true }).addTo(map);
-            }
-
+            latInput.value = lat; lonInput.value = lon; map.setView([lat, lon], 13);
+            coordsDisplay.textContent = `${lat}, ${lon}`;
+            if (locationMarker) locationMarker.setLatLng([lat, lon]);
+            else locationMarker = L.marker([lat, lon], { draggable: true }).addTo(map);
             generateFlood();
         };
 
-        // Generate flood visualization
         async function generateFlood() {
-            const lat = parseFloat(latInput.value);
-            const lon = parseFloat(lonInput.value);
-            const waterLevelRise = parseFloat(waterLevelSlider.value);
-
-            if (isNaN(lat) || isNaN(lon)) {
-                alert('Please enter valid coordinates or click on the map');
-                return;
-            }
-
-            // Show loading
-            loadingOverlay.classList.remove('d-none');
-            statusBadge.textContent = 'Generating...';
-            statusBadge.className = 'badge bg-warning';
-            generateBtn.disabled = true;
-
+            loadingOverlay.classList.remove('d-none'); statusBadge.textContent = 'MODELLING...';
             try {
-                const response = await fetch('/api/flood/predict', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        lat: lat,
-                        lon: lon,
-                        water_level_rise: waterLevelRise
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Update map view
-                    map.setView([lat, lon], 13);
-
-                    // Remove old overlay if exists
-                    if (floodOverlay) {
-                        map.removeLayer(floodOverlay);
-                    }
-
-                    // Add flood image overlay on the map
-                    const bounds = data.overlay_bounds;
-                    const imageBounds = [
-                        [bounds.south, bounds.west],
-                        [bounds.north, bounds.east]
-                    ];
-
-                    floodOverlay = L.imageOverlay(
-                        'data:image/png;base64,' + data.image_base64,
-                        imageBounds,
-                        { opacity: 0.7 }
-                    ).addTo(map);
-
-                    // Update or create marker
-                    if (locationMarker) {
-                        locationMarker.setLatLng([lat, lon]);
-                        locationMarker.setPopupContent(`
-                            <strong>Flood Simulation Complete</strong><br>
-                            Location: ${lat.toFixed(4)}, ${lon.toFixed(4)}<br>
-                            Water Rise: ${waterLevelRise}m<br>
-                            Flooded Area: ${data.statistics.flooded_area_km2?.toFixed(2)} km²
-                        `);
-                        locationMarker.openPopup();
-                    }
-
-                    // Update statistics
-                    const stats = data.statistics;
-                    document.getElementById('statArea').textContent = stats.flooded_area_km2?.toFixed(2) || '--';
-                    document.getElementById('statPercent').textContent = stats.flooded_percentage?.toFixed(1) + '%' || '--';
-                    document.getElementById('statMaxDepth').textContent = stats.max_depth_m?.toFixed(1) || '--';
-                    document.getElementById('statMeanDepth').textContent = stats.mean_depth_m?.toFixed(1) || '--';
-
-                    statusBadge.textContent = 'Complete';
-                    statusBadge.className = 'badge bg-success';
-                } else {
-                    throw new Error(data.error || 'Failed to generate flood visualization');
+                const res = await (await fetch('/api/flood/predict', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lat: latInput.value, lon: lonInput.value, water_level_rise: waterLevelSlider.value }) })).json();
+                if (res.success) {
+                    if (floodOverlay) map.removeLayer(floodOverlay);
+                    const b = res.overlay_bounds;
+                    floodOverlay = L.imageOverlay('data:image/png;base64,' + res.image_base64, [[b.south, b.west], [b.north, b.east]], { opacity: 0.75 }).addTo(map);
+                    document.getElementById('statArea').textContent = res.statistics.flooded_area_km2.toFixed(2);
+                    document.getElementById('statMaxDepth').textContent = res.statistics.max_depth_m.toFixed(1);
+                    document.getElementById('statPercent').textContent = res.statistics.flooded_percentage.toFixed(1) + '%';
                 }
-
-            } catch (error) {
-                console.error('Error:', error);
-                statusBadge.textContent = 'Error';
-                statusBadge.className = 'badge bg-danger';
-                alert('Error: ' + error.message);
-            } finally {
-                loadingOverlay.classList.add('d-none');
-                generateBtn.disabled = false;
-            }
+            } catch (e) { } finally { loadingOverlay.classList.add('d-none'); statusBadge.textContent = 'READY'; }
         }
 
-        // Button click handler
-        generateBtn.addEventListener('click', generateFlood);
-
-        // Hours slider handler
-        hoursSlider.addEventListener('input', function () {
-            hoursValue.textContent = this.value;
-        });
-
-        // Load monitoring sites for dropdown
-        async function loadMonitoringSites() {
-            try {
-                const response = await fetch('/api/flood/sites');
-                const data = await response.json();
-
-                if (data.success && data.sites) {
-                    siteSelector.innerHTML = '<option value="">-- Select a Site --</option>';
-                    data.sites.forEach(site => {
-                        const option = document.createElement('option');
-                        option.value = site.id;
-                        option.textContent = `${site.name} (${site.river_code || 'N/A'})`;
-                        option.dataset.lat = site.lat;
-                        option.dataset.lon = site.lon;
-                        option.dataset.threshold = site.flood_threshold || 10;
-                        siteSelector.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading sites:', error);
-            }
-        }
-
-        // Site selector change handler
-        siteSelector.addEventListener('change', function () {
-            const option = this.options[this.selectedIndex];
-            if (option.value) {
-                selectedSiteId = parseInt(option.value);
-                const lat = parseFloat(option.dataset.lat);
-                const lon = parseFloat(option.dataset.lon);
-                const threshold = parseFloat(option.dataset.threshold);
-
-                // Update inputs
-                latInput.value = lat.toFixed(4);
-                lonInput.value = lon.toFixed(4);
-
-                // Update map
-                map.setView([lat, lon], 12);
-                coordsDisplay.textContent = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-
-                // Update marker
-                if (locationMarker) {
-                    locationMarker.setLatLng([lat, lon]);
-                } else {
-                    locationMarker = L.marker([lat, lon], { draggable: true }).addTo(map);
-                }
-
-                // Update threshold display
-                dangerLevelEl.textContent = threshold.toFixed(1);
-                warningLevelEl.textContent = (threshold * 0.7).toFixed(1);
-
-                // Enable predict from site button
-                predictFromSiteBtn.disabled = false;
-            } else {
-                selectedSiteId = null;
-                predictFromSiteBtn.disabled = true;
-            }
-        });
-
-        // Predict from Site Data
-        async function predictFromSite() {
-            if (!selectedSiteId) {
-                alert('Please select a site first');
-                return;
-            }
-
-            loadingOverlay.classList.remove('d-none');
-            statusBadge.textContent = 'Predicting...';
-            statusBadge.className = 'badge bg-warning';
-            predictFromSiteBtn.disabled = true;
-
-            try {
-                const response = await fetch('/api/flood/predict-from-site', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        site_id: selectedSiteId,
-                        hours_ahead: parseInt(hoursSlider.value)
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Update map view
-                    map.setView([data.site.lat, data.site.lon], 13);
-
-                    // Remove old overlay
-                    if (floodOverlay) {
-                        map.removeLayer(floodOverlay);
-                    }
-
-                    // Add flood image overlay
-                    const bounds = data.overlay_bounds;
-                    const imageBounds = [
-                        [bounds.south, bounds.west],
-                        [bounds.north, bounds.east]
-                    ];
-
-                    floodOverlay = L.imageOverlay(
-                        'data:image/png;base64,' + data.image_base64,
-                        imageBounds,
-                        { opacity: 0.7 }
-                    ).addTo(map);
-
-                    // Update rate of rise display
-                    if (data.prediction.rate_of_rise_m_hr !== null) {
-                        rateOfRiseEl.textContent = data.prediction.rate_of_rise_m_hr.toFixed(3);
-                    } else {
-                        rateOfRiseEl.textContent = 'N/A';
-                    }
-                    predictedDeltaEl.textContent = '+' + data.prediction.delta_h.toFixed(2) + 'm';
-
-                    // Update severity
-                    warningLevelEl.textContent = data.severity.warning_level.toFixed(1);
-                    dangerLevelEl.textContent = data.severity.danger_level.toFixed(1);
-
-                    // Show severity alert
-                    severityAlert.style.display = 'block';
-                    severityAlert.className = `alert py-2 mb-0 alert-${data.severity.severity === 'danger' ? 'danger' :
-                            data.severity.severity === 'warning' ? 'warning' :
-                                data.severity.severity === 'elevated' ? 'warning' : 'success'
-                        }`;
-                    severityMessage.textContent = data.severity.message;
-
-                    // Update statistics
-                    const stats = data.statistics;
-                    document.getElementById('statArea').textContent = stats.flooded_area_km2?.toFixed(2) || '--';
-                    document.getElementById('statPercent').textContent = stats.flooded_percentage?.toFixed(1) + '%' || '--';
-                    document.getElementById('statMaxDepth').textContent = stats.max_depth_m?.toFixed(1) || '--';
-                    document.getElementById('statMeanDepth').textContent = stats.mean_depth_m?.toFixed(1) || '--';
-
-                    // Update popup
-                    if (locationMarker) {
-                        locationMarker.bindPopup(`
-                            <strong>${data.site.name}</strong><br>
-                            Prediction: +${data.prediction.delta_h.toFixed(2)}m in ${data.prediction.hours_ahead}h<br>
-                            Rate: ${data.prediction.rate_of_rise_m_hr?.toFixed(3) || 'N/A'} m/hr<br>
-                            <span class="text-${data.severity.severity === 'danger' ? 'danger' : 'success'}">${data.severity.message}</span>
-                        `).openPopup();
-                    }
-
-                    statusBadge.textContent = 'Complete';
-                    statusBadge.className = 'badge bg-success';
-                } else {
-                    throw new Error(data.error || 'Prediction failed');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                statusBadge.textContent = 'Error';
-                statusBadge.className = 'badge bg-danger';
-                alert('Error: ' + error.message);
-            } finally {
-                loadingOverlay.classList.add('d-none');
-                predictFromSiteBtn.disabled = false;
-            }
-        }
-
-        predictFromSiteBtn.addEventListener('click', predictFromSite);
-
-        // Initialize
+        generateBtn.onclick = generateFlood;
         loadScenarios();
-        loadMonitoringSites();
+
+        // Load Sites
+        fetch('/api/flood/sites').then(r => r.json()).then(d => {
+            if (d.success) d.sites.forEach(s => {
+                const o = document.createElement('option'); o.value = s.id; o.textContent = s.name;
+                o.dataset.lat = s.lat; o.dataset.lon = s.lon; o.dataset.thr = s.flood_threshold;
+                siteSelector.appendChild(o);
+            });
+        });
+
+        siteSelector.onchange = () => {
+            const o = siteSelector.options[siteSelector.selectedIndex];
+            if (!o.value) return;
+            latInput.value = o.dataset.lat; lonInput.value = o.dataset.lon;
+            dangerLevelEl.textContent = o.dataset.thr; map.setView([o.dataset.lat, o.dataset.lon], 13);
+            predictFromSiteBtn.disabled = false;
+        };
+
+        predictFromSiteBtn.onclick = async () => {
+            loadingOverlay.classList.remove('d-none');
+            try {
+                const res = await (await fetch('/api/flood/predict-from-site', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ site_id: siteSelector.value, hours_ahead: hoursSlider.value }) })).json();
+                if (res.success) {
+                    if (floodOverlay) map.removeLayer(floodOverlay);
+                    const b = res.overlay_bounds;
+                    floodOverlay = L.imageOverlay('data:image/png;base64,' + res.image_base64, [[b.south, b.west], [b.north, b.east]], { opacity: 0.75 }).addTo(map);
+                    rateOfRiseEl.textContent = res.prediction.rate_of_rise_m_hr.toFixed(3);
+                    severityAlert.classList.remove('d-none');
+                    severityAlert.className = `alert border-0 rounded-4 p-3 mb-0 text-center alert-${res.severity.severity === 'danger' ? 'danger' : 'warning'}`;
+                    severityMessage.textContent = res.severity.message;
+                }
+            } catch (e) { } finally { loadingOverlay.classList.add('d-none'); }
+        };
     });
 </script>
 {% endblock %}

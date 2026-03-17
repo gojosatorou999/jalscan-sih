@@ -53,9 +53,12 @@ def create_app(config_name='default'):
     # Register blueprints
     app.register_blueprint(auth_bp)
     
-    # Register flood synthesis blueprint
-    from flood_synthesis.flood_api import flood_bp
-    app.register_blueprint(flood_bp)
+    # Register flood synthesis blueprint (optional - skip if dependencies missing)
+    try:
+        from flood_synthesis.flood_api import flood_bp
+        app.register_blueprint(flood_bp)
+    except Exception as e:
+        app.logger.warning(f"Flood synthesis blueprint not available: {e}")
     
     # Initialize services
     sync_service = SyncService(app)

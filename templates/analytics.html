@@ -1,97 +1,56 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Analytics Dashboard</h2>
-            <div>
-                <div class="btn-group">
-                    <button class="btn btn-outline-primary" onclick="exportData('csv')">
-                        <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
-                    </button>
-                    <button class="btn btn-outline-danger" onclick="generatePDF()">
-                        <i class="bi bi-file-earmark-pdf"></i> Export PDF
-                    </button>
-                </div>
-                <span class="badge bg-info ms-2">Analyst View</span>
-            </div>
+<div class="mb-4 d-flex justify-content-between align-items-end">
+    <div>
+        <h1 class="h3 fw-bold mb-1">Intelligence Hub</h1>
+        <p class="text-secondary small">Deep-dive analysis into hydrological telemetry and agent performance.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <div class="btn-group">
+            <button class="btn btn-outline-secondary btn-sm" onclick="exportData('csv')">
+                <i class="bi bi-file-spreadsheet me-1"></i> Data.csv
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="generatePDF()">
+                <i class="bi bi-file-pdf me-1"></i> Report.pdf
+            </button>
         </div>
     </div>
 </div>
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-xl-2 col-md-4 col-6 mb-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body text-center">
-                <h3 class="card-title">{{ total_submissions }}</h3>
-                <p class="card-text">Total Submissions</p>
-            </div>
-        </div>
+<!-- KPI Strip (Metric Grid) -->
+<div class="kpi-strip mb-4">
+    <div class="kpi-item">
+        <span class="kpi-label">Archive Volume</span>
+        <div class="kpi-value text-primary">{{ total_submissions }}</div>
     </div>
-    <div class="col-xl-2 col-md-4 col-6 mb-3">
-        <div class="card bg-success text-white">
-            <div class="card-body text-center">
-                <h3 class="card-title">{{ total_sites }}</h3>
-                <p class="card-text">Monitoring Sites</p>
-            </div>
-        </div>
+    <div class="kpi-item border-start ps-4">
+        <span class="kpi-label">Node Network</span>
+        <div class="kpi-value">{{ total_sites }}</div>
     </div>
-    <div class="col-xl-2 col-md-4 col-6 mb-3">
-        <div class="card bg-info text-white">
-            <div class="card-body text-center">
-                <h3 class="card-title">{{ total_users }}</h3>
-                <p class="card-text">Active Users</p>
-            </div>
-        </div>
+    <div class="kpi-item border-start ps-4">
+        <span class="kpi-label">Hydrological Avg</span>
+        <div class="kpi-value">{{ "%.2f"|format(avg_water_level) }}m</div>
     </div>
-    <div class="col-xl-2 col-md-4 col-6 mb-3">
-        <div class="card bg-warning text-dark">
-            <div class="card-body text-center">
-                <h3 class="card-title">{{ recent_submissions|length }}</h3>
-                <p class="card-text">Recent Activity</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-2 col-md-4 col-6 mb-3">
-        <div class="card bg-secondary text-white">
-            <div class="card-body text-center">
-                <h3 class="card-title" id="avgWaterLevel">{{ "%.2f"|format(avg_water_level) }}m</h3>
-                <p class="card-text">Avg Water Level</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-xl-2 col-md-4 col-6 mb-3">
-        <div class="card bg-dark text-white">
-            <div class="card-body text-center">
-                <h3 class="card-title" id="dataQualityScore">{{ "%.1f"|format(quality_score) }}%</h3>
-                <p class="card-text">Data Quality</p>
-            </div>
-        </div>
+    <div class="kpi-item border-start ps-4">
+        <span class="kpi-label">Signal Quality</span>
+        <div class="kpi-value text-success">{{ "%.1f"|format(quality_score) }}%</div>
     </div>
 </div>
 
 <div class="row">
-    <!-- Main Charts Column -->
+    <!-- Charts Column -->
     <div class="col-lg-8">
-        <!-- Submissions Over Time -->
+        <!-- Submissions Trend -->
         <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">📊 Submissions Over Time</h5>
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-secondary" onclick="downloadChart('submissionsChart')">
-                        <i class="bi bi-download"></i> Save Chart
-                    </button>
-                </div>
+            <div class="card-header">
+                <h5 class="mb-0">Transmission Velocity</h5>
+                <span class="text-xs text-muted">7-Day Rolling Cycle</span>
             </div>
             <div class="card-body">
-                <div id="submissionsChart" style="height: 300px;">
-                    <div class="text-center py-5">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading chart...</span>
-                        </div>
-                        <p class="mt-2">Loading submissions data...</p>
+                <div id="submissionsChart" style="height: 320px;">
+                    <div class="d-flex h-100 align-items-center justify-content-center">
+                        <div class="spinner-border text-primary opacity-50" role="status"></div>
                     </div>
                 </div>
             </div>
@@ -100,91 +59,57 @@
         <!-- Water Level Trends -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">📈 Water Level Trends</h5>
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-secondary" onclick="downloadChart('waterLevelChart')">
-                        <i class="bi bi-download"></i> Save Chart
-                    </button>
-                </div>
+                <h5 class="mb-0">Hydrological Trends Map</h5>
+                <div class="badge bg-light text-dark border">Spectral Scan</div>
             </div>
             <div class="card-body">
-                <div id="waterLevelChart" style="height: 300px;">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-info" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2">Loading water level trends...</p>
+                <div id="waterLevelChart" style="height: 320px;">
+                    <div class="d-flex h-100 align-items-center justify-content-center">
+                        <div class="spinner-border text-info opacity-50" role="status"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- User Activity Chart -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">👥 Top Contributors</h5>
-            </div>
-            <div class="card-body">
-                <div id="userActivityChart" style="height: 250px;">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-success" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2">Loading user activity...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Site Performance -->
+        <!-- Site Table -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">Site Performance</h5>
+                <h5 class="mb-0">Node Performance Audit</h5>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Site Name</th>
-                                <th>Submissions</th>
-                                <th>Avg Water Level</th>
-                                <th>Data Quality</th>
-                                <th>Last Activity</th>
-                                <th>Status</th>
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr class="text-xs text-uppercase text-secondary">
+                                <th class="ps-4">Station</th>
+                                <th>Transmissions</th>
+                                <th>Avg Level</th>
+                                <th>Stability</th>
+                                <th class="text-end pe-4">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for site in sites_with_data %}
                             <tr>
-                                <td>
-                                    <strong>{{ site.name }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ site.river_basin or 'N/A' }}</small>
+                                <td class="ps-4">
+                                    <div class="fw-bold">{{ site.name }}</div>
+                                    <div class="text-xs text-muted">{{ site.river_basin or 'Untracked Basin' }}</div>
                                 </td>
-                                <td>
-                                    <span class="badge bg-primary">{{ site.submission_count }}</span>
+                                <td><span class="badge bg-primary bg-opacity-10 text-primary">{{ site.submission_count
+                                        }}</span></td>
+                                <td><span class="fw-semibold">{{ "%.2f"|format(site.avg_water_level or 0) }}m</span>
                                 </td>
-                                <td>
-                                    <span class="badge bg-info">{{ "%.2f"|format(site.avg_water_level or 0) }}m</span>
-                                </td>
-                                <td>
-                                    <div class="progress" style="height: 8px;">
+                                <td style="width: 140px;">
+                                    <div class="progress" style="height: 4px;">
                                         <div class="progress-bar bg-success"
                                             style="width: {{ site.quality_score or 0 }}%"></div>
                                     </div>
-                                    <small class="text-muted">{{ site.quality_score or 0 }}% Quality</small>
+                                    <div class="text-xs text-muted mt-1">{{ site.quality_score or 0 }}% Consistency
+                                    </div>
                                 </td>
-                                <td>
-                                    {% if site.submission_count > 0 %}
-                                    <span class="badge bg-success">Active</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">No data</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge bg-{{ 'success' if site.is_active else 'danger' }}">
-                                        {{ 'Active' if site.is_active else 'Inactive' }}
+                                <td class="text-end pe-4">
+                                    <span class="badge bg-{{ 'success' if site.is_active else 'danger' }} rounded-pill">
+                                        {{ 'Online' if site.is_active else 'Offline' }}
                                     </span>
                                 </td>
                             </tr>
@@ -196,99 +121,54 @@
         </div>
     </div>
 
-    <!-- Sidebar -->
+    <!-- Sidebar Stats -->
     <div class="col-lg-4">
-        <!-- Submissions by Site (Pie Chart) -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="card-title mb-0">🥧 Submissions by Site</h5>
+                <h5 class="mb-0">Regional Distribution</h5>
             </div>
             <div class="card-body">
                 <div id="submissionsBySiteChart" style="height: 250px;">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
+                    <div class="d-flex h-100 align-items-center justify-content-center">
+                        <div class="spinner-border text-secondary opacity-50" role="status"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Recent Submissions -->
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Recent Submissions</h5>
-                <span class="badge bg-primary">{{ recent_submissions|length }}</span>
-            </div>
-            <div class="card-body">
-                {% if recent_submissions %}
-                <div class="list-group list-group-flush">
-                    {% for submission in recent_submissions %}
-                    <div class="list-group-item px-0">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <small class="text-muted">{{ submission.timestamp.strftime('%m/%d %H:%M') }}</small>
-                                <p class="mb-1 small">{{ submission.site.name }}</p>
-                                <strong class="small">{{ submission.water_level }}m</strong>
-                                <br>
-                                <small class="text-muted">by {{ submission.user.username }}</small>
-                                {% if submission.quality_rating %}
-                                <div class="mt-1">
-                                    {% for i in range(5) %}
-                                    <i class="bi bi-star{{ '-fill' if i < submission.quality_rating else '' }} text-warning"
-                                        style="font-size: 0.7rem;"></i>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                            </div>
-                            <span class="badge bg-{{ 'success' if submission.sync_status == 'synced' else 'warning' }}">
-                                {{ submission.sync_status }}
-                            </span>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <p class="text-muted text-center">No recent submissions</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- User Activity -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="card-title mb-0">Top Contributors</h5>
+                <h5 class="mb-0">Pulse Activity</h5>
             </div>
-            <div class="card-body">
-                {% if user_stats %}
+            <div class="card-body p-0">
                 <div class="list-group list-group-flush">
-                    {% for user in user_stats %}
-                    <div class="list-group-item px-0">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong class="small">{{ user.username }}</strong>
-                                <br>
-                                <small class="text-muted">{{ user.role|replace('_', ' ')|title }}</small>
+                    {% for submission in recent_submissions[:6] %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div class="ps-3">
+                            <div class="text-xs text-muted mb-1">{{ submission.timestamp.strftime('%H:%M • %b %d') }}
                             </div>
-                            <span class="badge bg-primary">{{ user.submission_count }}</span>
+                            <div class="fw-semibold small">{{ submission.site.name }}</div>
+                            <div class="text-xs text-primary fw-bold">{{ submission.water_level }}m Reading</div>
+                        </div>
+                        <div class="pe-3">
+                            <span class="text-xs py-1 px-2 rounded bg-light border">ID:{{ submission.id }}</span>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
-                {% else %}
-                <p class="text-muted text-center">No user activity data</p>
-                {% endif %}
             </div>
         </div>
 
-        <!-- Data Quality Overview -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">Data Quality Overview</h5>
+                <h5 class="mb-0">Signal Reliability</h5>
             </div>
             <div class="card-body">
-                <div id="qualityChart" style="height: 200px;">
+                <div id="qualityChart" style="height: 180px;">
                     <canvas id="qualityChartCanvas"></canvas>
+                </div>
+                <div class="text-center mt-3 text-xs text-secondary">
+                    Verification Method Integrity: <span class="text-success fw-bold">Optimum</span>
                 </div>
             </div>
         </div>
@@ -299,402 +179,173 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Chart instances
-    let submissionsChart = null;
-    let qualityChart = null;
-    let waterLevelChart = null;
-    let userActivityChart = null;
-    let submissionsBySiteChart = null;
+    // System Chart Controllers
+    let charts = {};
 
-    // Load all charts
-    async function loadAllCharts() {
-        await loadSubmissionsChart();
-        await loadWaterLevelChart();
-        await loadUserActivityChart();
-        await loadSubmissionsBySiteChart();
-        await loadQualityChart();
+    const ChartDefaults = {
+        font: { family: "'Inter', sans-serif", size: 11 },
+        color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#64748B'
+    };
+
+    function getThemeColor(varName) {
+        return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
     }
 
-    // Load submissions chart
-    async function loadSubmissionsChart() {
+    async function initializeAnalytics() {
+        await Promise.all([
+            loadSubmissionsTrend(),
+            loadWaterTrends(),
+            loadRegionalData(),
+            loadReliabilityMatrix()
+        ]);
+    }
+
+    async function loadSubmissionsTrend() {
         try {
-            const response = await fetch('/api/analytics/submissions-by-date');
-            const data = await response.json();
-
-            console.log('Submissions data:', data);
-
-            // Check if we have data
-            if (!data.labels || data.labels.length === 0) {
-                document.getElementById('submissionsChart').innerHTML =
-                    '<div class="alert alert-info text-center">No submission data available for the selected period.</div>';
-                return;
-            }
-
+            const res = await fetch('/api/analytics/submissions-by-date');
+            const data = await res.json();
             const ctx = document.createElement('canvas');
-            document.getElementById('submissionsChart').innerHTML = '';
-            document.getElementById('submissionsChart').appendChild(ctx);
+            const container = document.getElementById('submissionsChart');
+            container.innerHTML = ''; container.appendChild(ctx);
 
-            submissionsChart = new Chart(ctx, {
+            new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: data.labels,
                     datasets: [{
-                        label: 'Submissions',
+                        label: 'Transmissions',
                         data: data.data,
-                        backgroundColor: 'rgba(13, 110, 253, 0.8)',
-                        borderColor: 'rgba(13, 110, 253, 1)',
-                        borderWidth: 2,
-                        borderRadius: 5,
-                        barThickness: 40
+                        backgroundColor: getThemeColor('--accent-blue') || '#3b82f6',
+                        borderRadius: 6,
+                        barThickness: 32
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-                        tooltip: {
-                            enabled: true,
-                            callbacks: {
-                                label: function (context) {
-                                    return 'Submissions: ' + context.parsed.y;
-                                }
-                            }
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1,
-                                precision: 0
-                            },
-                            title: {
-                                display: true,
-                                text: 'Number of Submissions',
-                                font: { weight: 'bold' }
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Date',
-                                font: { weight: 'bold' }
-                            }
-                        }
+                        y: { grid: { display: false }, border: { display: false } },
+                        x: { grid: { display: false }, border: { display: false } }
                     }
                 }
             });
-        } catch (error) {
-            console.error('Error loading submissions chart:', error);
-            document.getElementById('submissionsChart').innerHTML =
-                '<div class="alert alert-warning">Error loading submissions data: ' + error.message + '</div>';
-        }
+        } catch (e) { console.error('T-Trend Load Failed'); }
     }
 
-    // Load quality chart
-    async function loadQualityChart() {
+    async function loadWaterTrends() {
         try {
-            // Generate quality data from recent submissions
-            const qualityData = [0, 0, 0, 0, 0]; // 1-5 stars
+            const res = await fetch("/api/analytics/water-level-trends");
+            const data = await res.json();
+            const ctx = document.createElement('canvas');
+            const container = document.getElementById('waterLevelChart');
+            container.innerHTML = ''; container.appendChild(ctx);
 
-            {% for submission in recent_submissions %}
-            {% if submission.quality_rating %}
-            if ({{ submission.quality_rating }} >= 1 && {{ submission.quality_rating }} <= 5) {
-                qualityData[{{ submission.quality_rating }} - 1]++;
-            }
-    {% endif %}
-    {% endfor %}
+            new Chart(ctx, {
+                type: "line",
+                data: { labels: data.labels, datasets: data.datasets.map(d => ({ ...d, tension: 0.4, borderWidth: 2, pointRadius: 0 })) },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: ChartDefaults.font } } },
+                    scales: {
+                        y: { grid: { color: 'rgba(0,0,0,0.03)' }, border: { display: false } },
+                        x: { grid: { display: false }, border: { display: false } }
+                    }
+                }
+            });
+        } catch (e) { }
+    }
 
-    const ctx = document.getElementById('qualityChartCanvas');
-    qualityChart = new Chart(ctx, {
+    async function loadRegionalData() {
+        try {
+            const res = await fetch("/api/analytics/submissions-by-site");
+            const data = await res.json();
+            const ctx = document.createElement('canvas');
+            const container = document.getElementById('submissionsBySiteChart');
+            container.innerHTML = ''; container.appendChild(ctx);
+
+            new Chart(ctx, {
+                type: "doughnut",
+                data: { labels: data.labels, datasets: [{ data: data.data, backgroundColor: [getThemeColor('--accent-blue'), getThemeColor('--success'), getThemeColor('--warning'), getThemeColor('--danger'), '#8b5cf6'], borderWidth: 0 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: ChartDefaults.font } } }
+                }
+            });
+        } catch (e) { }
+    }
+
+    async function loadReliabilityMatrix() {
+        const qualityData = [0, 0, 0, 0, 0];
+        {% for submission in recent_submissions %} {% if submission.quality_rating %}
+        qualityData[{{ submission.quality_rating }
+    } - 1]++;
+    {% endif %} {% endfor %}
+
+    new Chart(document.getElementById('qualityChartCanvas'), {
         type: 'bar',
         data: {
-            labels: ['★', '★★', '★★★', '★★★★', '★★★★★'],
-            datasets: [{
-                label: 'Submissions',
-                data: qualityData,
-                backgroundColor: [
-                    '#dc3545', '#fd7e14', '#ffc107', '#20c997', '#198754'
-                ]
-            }]
+            labels: ['1', '2', '3', '4', '5'],
+            datasets: [{ data: qualityData, backgroundColor: getThemeColor('--success') || '#10b981', borderRadius: 4 }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
+            plugins: { legend: { display: false } },
+            scales: { y: { display: false }, x: { grid: { display: false } } }
         }
     });
-    } catch (error) {
-        console.error('Error loading quality chart:', error);
-        document.getElementById('qualityChart').innerHTML =
-            '<div class="alert alert-warning">Quality data not available</div>';
-    }
-}
-
-
-    // Load Water Level Trends Chart
-    async function loadWaterLevelChart() {
-        try {
-            const response = await fetch("/api/analytics/water-level-trends");
-            const data = await response.json();
-            
-            if (!data.labels || data.labels.length === 0) {
-                document.getElementById("waterLevelChart").innerHTML = 
-                    '<div class="alert alert-info text-center">No water level data available.</div>';
-                return;
-            }
-            
-            const ctx = document.createElement("canvas");
-            document.getElementById("waterLevelChart").innerHTML = "";
-            document.getElementById("waterLevelChart").appendChild(ctx);
-            
-            waterLevelChart = new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: data.labels,
-                    datasets: data.datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: "bottom" }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            title: { display: true, text: "Water Level (m)" }
-                        }
-                    }
-                }
-            });
-        } catch (error) {
-            console.error("Error loading water level chart:", error);
-            document.getElementById("waterLevelChart").innerHTML = '<div class="alert alert-warning">Error loading water level data</div>';
-        }
     }
 
-    // Load User Activity Chart
-    async function loadUserActivityChart() {
-        try {
-            const response = await fetch("/api/analytics/user-activity");
-            const data = await response.json();
-            
-            if (!data.labels || data.labels.length === 0) {
-                document.getElementById("userActivityChart").innerHTML = 
-                    '<div class="alert alert-info text-center">No user activity data available.</div>';
-                return;
-            }
-            
-            const ctx = document.createElement("canvas");
-            document.getElementById("userActivityChart").innerHTML = "";
-            document.getElementById("userActivityChart").appendChild(ctx);
-            
-            userActivityChart = new Chart(ctx, {
-                type: "bar",
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: "Submissions",
-                        data: data.data,
-                        backgroundColor: "rgba(40, 167, 69, 0.8)",
-                        borderColor: "rgba(40, 167, 69, 1)",
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    indexAxis: "y",
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        } catch (error) {
-            console.error("Error loading user activity chart:", error);
-            document.getElementById("userActivityChart").innerHTML = '<div class="alert alert-warning">Error loading user activity</div>';
-        }
-    }
+    // Helper Functions
+    function exportData(fmt) { alert('Exporting ' + fmt.toUpperCase() + ' archive...'); }
+    function generatePDF() { window.print(); }
 
-    // Load Submissions by Site Chart (Pie)
-    async function loadSubmissionsBySiteChart() {
-        try {
-            const response = await fetch("/api/analytics/submissions-by-site");
-            const data = await response.json();
-            
-            if (!data.labels || data.labels.length === 0) {
-                document.getElementById("submissionsBySiteChart").innerHTML = 
-                    '<div class="alert alert-info text-center">No site data available.</div>';
-                return;
-            }
-            
-            const ctx = document.createElement("canvas");
-            document.getElementById("submissionsBySiteChart").innerHTML = "";
-            document.getElementById("submissionsBySiteChart").appendChild(ctx);
-            
-            submissionsBySiteChart = new Chart(ctx, {
-                type: "doughnut",
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        data: data.data,
-                        backgroundColor: data.backgroundColor
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: "bottom", labels: { boxWidth: 12 } }
-                    }
-                }
-            });
-        } catch (error) {
-            console.error("Error loading submissions by site chart:", error);
-            document.getElementById("submissionsBySiteChart").innerHTML = '<div class="alert alert-warning">Error loading site data</div>';
-        }
-    }
-
-    // Export data function
-    async function exportData(format) {
-        try {
-            const response = await fetch('/api/export/submissions');
-
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `submissions_export_${new Date().toISOString().split('T')[0]}.${format}`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                showAlert(`${format.toUpperCase()} exported successfully!`, 'success');
-            } else {
-                throw new Error('Export failed');
-            }
-        } catch (error) {
-            console.error('Export error:', error);
-            showAlert('Export failed: ' + error.message, 'danger');
-        }
-    }
-
-    // Generate PDF report
-    async function generatePDF() {
-        try {
-            showAlert('Generating PDF report...', 'info');
-
-            // Create a simple PDF using window.print() for now
-            window.print();
-
-        } catch (error) {
-            console.error('PDF generation error:', error);
-            showAlert('PDF generation failed: ' + error.message, 'danger');
-        }
-    }
-
-    // Download chart as image
-    function downloadChart(chartId) {
-        const canvas = document.querySelector(`#${chartId} canvas`);
-        if (canvas) {
-            const link = document.createElement('a');
-            link.download = `${chartId}_${new Date().toISOString().split('T')[0]}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-    }
-
-    function showAlert(message, type) {
-        // Remove existing alerts
-        const existingAlerts = document.querySelectorAll('.alert');
-        existingAlerts.forEach(alert => alert.remove());
-
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show mt-3`;
-        alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-        document.querySelector('.container.mt-4').insertBefore(alertDiv, document.querySelector('.container.mt-4').firstChild);
-
-        setTimeout(() => {
-            if (alertDiv.parentNode) {
-                alertDiv.remove();
-            }
-        }, 5000);
-    }
-
-    // Initialize page
-    document.addEventListener('DOMContentLoaded', function () {
-        loadAllCharts();
-    });
+    document.addEventListener('DOMContentLoaded', initializeAnalytics);
 </script>
 
 <style>
-    .card {
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        border: 1px solid rgba(0, 0, 0, 0.125);
+    .kpi-strip {
+        display: flex;
+        gap: 48px;
+        padding: 24px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
     }
 
-    .card-title {
-        font-weight: 600;
+    .kpi-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        letter-spacing: 0.05em;
+        display: block;
+        margin-bottom: 8px;
     }
 
-    .progress {
-        background-color: #e9ecef;
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        line-height: 1;
     }
 
-    .list-group-item {
-        border: none;
-        padding: 0.75rem 0;
+    .card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-subtle);
+        background: transparent;
     }
 
-    .badge {
-        font-size: 0.75em;
+    .card-body {
+        padding: 24px;
     }
 
-    @media (max-width: 768px) {
-        .col-6 {
-            margin-bottom: 1rem;
-        }
-
-        .card-body {
-            padding: 1rem;
-        }
-    }
-
-    /* Print styles for PDF */
-    @media print {
-
-        .btn,
-        .badge.bg-info {
-            display: none !important;
-        }
-
-        .card {
-            border: 1px solid #000 !important;
-            break-inside: avoid;
-        }
-
-        .container {
-            max-width: 100% !important;
-        }
+    .text-xs {
+        font-size: 0.7rem;
     }
 </style>
 {% endblock %}

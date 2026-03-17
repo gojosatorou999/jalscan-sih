@@ -30,50 +30,50 @@
     <!-- Overview Stats -->
     <div class="row mb-4" id="overview-stats" style="display: none;">
         <div class="col-md-2 mb-3">
-            <div class="card bg-primary text-white h-100">
+            <div class="card bg-primary-subtle h-100 border">
                 <div class="card-body text-center py-3">
-                    <h4 class="mb-0" id="stat-analyses">-</h4>
-                    <small data-i18n="total_analyses">Total Analyses</small>
+                    <h4 class="mb-0 fw-bold text-primary" id="stat-analyses">-</h4>
+                    <small class="text-secondary">Analyses</small>
                 </div>
             </div>
         </div>
         <div class="col-md-2 mb-3">
-            <div class="card bg-info text-white h-100">
+            <div class="card bg-info-subtle h-100 border">
                 <div class="card-body text-center py-3">
-                    <h4 class="mb-0" id="stat-visibility">-%</h4>
-                    <small data-i18n="avg_gauge_visibility">Avg Gauge Visibility</small>
+                    <h4 class="mb-0 fw-bold text-info" id="stat-visibility">-%</h4>
+                    <small class="text-secondary">Visibility</small>
                 </div>
             </div>
         </div>
         <div class="col-md-2 mb-3">
-            <div class="card bg-warning text-dark h-100">
+            <div class="card bg-warning-subtle h-100 border">
                 <div class="card-body text-center py-3">
-                    <h4 class="mb-0" id="stat-anomalies">-</h4>
-                    <small data-i18n="anomaly_rate">Anomaly Rate</small>
+                    <h4 class="mb-0 fw-bold text-warning" id="stat-anomalies">-</h4>
+                    <small class="text-secondary" data-i18n="anomaly_rate">Anomalies</small>
                 </div>
             </div>
         </div>
         <div class="col-md-2 mb-3">
-            <div class="card bg-success text-white h-100">
+            <div class="card bg-success-subtle h-100 border">
                 <div class="card-body text-center py-3">
-                    <h4 class="mb-0" id="stat-sediment">-</h4>
-                    <small data-i18n="primary_sediment">Primary Sediment</small>
+                    <h4 class="mb-0 fw-bold text-success" id="stat-sediment">-</h4>
+                    <small class="text-secondary" data-i18n="primary_sediment">Sediment</small>
                 </div>
             </div>
         </div>
         <div class="col-md-2 mb-3">
-            <div class="card bg-secondary text-white h-100">
+            <div class="card bg-secondary h-100 border">
                 <div class="card-body text-center py-3">
-                    <h4 class="mb-0" id="stat-flow">-</h4>
-                    <small data-i18n="typical_flow">Typical Flow</small>
+                    <h4 class="mb-0 fw-bold text-primary" id="stat-flow">-</h4>
+                    <small class="text-secondary" data-i18n="typical_flow">Flow</small>
                 </div>
             </div>
         </div>
         <div class="col-md-2 mb-3">
-            <div class="card bg-danger text-white h-100" id="erosion-card">
+            <div class="card bg-danger-subtle h-100 border" id="erosion-card">
                 <div class="card-body text-center py-3">
-                    <h4 class="mb-0" id="stat-erosion">No</h4>
-                    <small data-i18n="erosion_detected">Erosion Detected</small>
+                    <h4 class="mb-0 fw-bold text-danger" id="stat-erosion">No</h4>
+                    <small class="text-secondary" data-i18n="erosion_detected">Erosion</small>
                 </div>
             </div>
         </div>
@@ -105,8 +105,8 @@
 
             <!-- Analysis Details -->
             <div class="card shadow-sm mt-4" id="analysis-details" style="display: none;">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0"><i class="bi bi-eye me-2"></i>Latest AI Analysis</h5>
+                <div class="card-header">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-eye me-2"></i>Latest AI Analysis</h5>
                 </div>
                 <div class="card-body" id="analysis-content">
                 </div>
@@ -117,9 +117,8 @@
         <div class="col-lg-4 mb-4">
             <!-- Trend Summary -->
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-gradient text-white"
-                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Trend Summary</h5>
+                <div class="card-header bg-primary">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-graph-up me-2"></i>Trend Summary</h5>
                 </div>
                 <div class="card-body" id="trend-summary">
                     <p class="text-muted text-center py-3">Select a site to view trends</p>
@@ -177,7 +176,7 @@
 
 <style>
     .timeline-item {
-        border-left: 3px solid #dee2e6;
+        border-left: 3px solid var(--border-subtle);
         padding: 1rem 0 1rem 1.5rem;
         position: relative;
         margin-left: 1rem;
@@ -191,19 +190,19 @@
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        background: #6c757d;
+        background: var(--text-muted);
     }
 
     .timeline-item.risk-low::before {
-        background: #28a745;
+        background: var(--brand-success);
     }
 
     .timeline-item.risk-medium::before {
-        background: #ffc107;
+        background: var(--brand-warning);
     }
 
     .timeline-item.risk-high::before {
-        background: #dc3545;
+        background: var(--brand-danger);
     }
 
     .metric-badge {
@@ -223,7 +222,7 @@
     }
 
     .analysis-card {
-        background: #f8f9fa;
+        background: var(--bg-hover);
         border-radius: 0.5rem;
         padding: 1rem;
         text-align: center;

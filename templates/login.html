@@ -2,263 +2,187 @@
 
 {% block content %}
 <style>
-    /* Override parent container margins for full-screen centering */
-    .container-fluid {
-        padding: 0 !important;
-        margin: 0 !important;
+    /* Absolute reset for Login Experience */
+    #page-content-wrapper {
+        margin-left: 0 !important;
+        padding-top: 0 !important;
     }
 
-    .login-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-        background: #f8f9fa;
-        z-index: 9999;
-    }
-
-    /* Hide all navigation elements on login page */
-    .app-header,
+    #sidebar-wrapper,
     .top-navbar,
     .app-bottom-nav,
-    .app-footer,
-    #mobile-nav,
-    nav.navbar {
+    .app-footer {
         display: none !important;
     }
 
-    .login-card {
+    .login-stage {
+        min-height: 100vh;
         display: flex;
-        max-width: 900px;
+        align-items: center;
+        justify-content: center;
+        background-color: #0A0F1A;
+        padding: 24px;
+    }
+
+    .login-box {
         width: 100%;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        max-width: 480px;
+        background: #131A2A;
+        border: 1px solid #1F2937;
+        border-radius: 24px;
+        padding: 48px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     }
 
-    .login-branding {
-        background: linear-gradient(135deg, #0062E6 0%, #33AEFF 50%, #00D4FF 100%);
-        padding: 3rem;
-        color: white;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+    .dark .login-box {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     }
 
-    .login-branding h2 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-    }
-
-    .login-branding p {
-        opacity: 0.9;
-        margin-bottom: 2rem;
-        font-size: 1.1rem;
-    }
-
-    .feature-item {
+    .brand-mark {
+        width: 48px;
+        height: 48px;
+        background: rgba(59, 130, 246, 0.1);
+        color: #3B82F6;
+        border-radius: 12px;
         display: flex;
         align-items: center;
-        margin-bottom: 1rem;
-        padding: 0.75rem;
-        background: rgba(255, 255, 255, 0.15);
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 24px;
+    }
+
+    .login-title {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+        color: #FFFFFF;
+    }
+
+    .login-subtitle {
+        color: #9CA3AF;
+        font-size: 15px;
+        margin-bottom: 32px;
+    }
+
+    .form-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #9CA3AF;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        background: #0A0F1A;
+        border: 1px solid #1F2937;
         border-radius: 10px;
-        backdrop-filter: blur(10px);
+        color: #FFFFFF;
+        font-size: 15px;
+        transition: all 0.2s;
+        margin-bottom: 20px;
     }
 
-    .feature-icon {
-        width: 40px;
-        height: 40px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
+    .form-input:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 14px;
+        background: var(--accent-blue);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        transition: transform 0.1s, opacity 0.2s;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 1rem;
-        font-size: 1.2rem;
+        gap: 10px;
     }
 
-    .login-form-container {
-        background: white;
-        padding: 3rem;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+    .btn-submit:hover {
+        opacity: 0.9;
     }
 
-    .login-form-container h3 {
-        font-weight: 700;
-        color: #1a1a2e;
-        margin-bottom: 0.5rem;
+    .btn-submit:active {
+        transform: scale(0.98);
     }
 
-    .login-form-container .subtitle {
-        color: #6c757d;
-        margin-bottom: 2rem;
-    }
-
-    .form-control-modern {
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
-        padding: 0.875rem 1rem;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .form-control-modern:focus {
-        border-color: #0062E6;
-        box-shadow: 0 0 0 4px rgba(0, 98, 230, 0.1);
-    }
-
-    .btn-login {
-        background: linear-gradient(135deg, #0062E6 0%, #33AEFF 100%);
-        border: none;
-        border-radius: 12px;
-        padding: 0.875rem;
-        font-size: 1rem;
-        font-weight: 600;
-        color: white;
-        transition: all 0.3s ease;
-    }
-
-    .btn-login:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(0, 98, 230, 0.3);
-    }
-
-    .input-group-modern {
-        position: relative;
-        margin-bottom: 1.5rem;
-    }
-
-    .input-icon {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-        z-index: 10;
-    }
-
-    .input-group-modern .form-control-modern {
-        padding-left: 3rem;
-    }
-
-    .public-link {
+    .alt-action {
         text-align: center;
-        margin-top: 1.5rem;
-        color: #6c757d;
+        margin-top: 24px;
+        font-size: 14px;
+        color: #9CA3AF;
     }
 
-    .public-link a {
-        color: #0062E6;
-        font-weight: 600;
+    .alt-action a {
+        color: #3B82F6;
         text-decoration: none;
+        font-weight: 600;
     }
 
-    .public-link a:hover {
-        text-decoration: underline;
+    .auth-footer {
+        margin-top: 48px;
+        padding-top: 24px;
+        border-top: 1px solid #1F2937;
+        display: flex;
+        justify-content: center;
+        gap: 16px;
     }
 
-    @media (max-width: 768px) {
-        .login-card {
-            flex-direction: column;
-        }
-
-        .login-branding {
-            padding: 2rem;
-        }
-
-        .login-form-container {
-            padding: 2rem;
-        }
+    .auth-footer-item {
+        font-size: 12px;
+        color: #9CA3AF;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 </style>
 
-<div class="login-container">
-    <div class="login-card">
-        <!-- Branding Side -->
-        <div class="login-branding d-none d-md-flex">
-            <div>
-                <div class="mb-4">
-                    <i class="bi bi-droplet-fill" style="font-size: 3rem;"></i>
-                </div>
-                <h2>JalScan</h2>
-                <p>India's First AI-Powered Water Level Monitoring & Flood Prediction System</p>
-
-                <div class="feature-item">
-                    <div class="feature-icon">📡</div>
-                    <div>
-                        <strong>Real-time Monitoring</strong>
-                        <br><small>Track water levels across sites</small>
-                    </div>
-                </div>
-
-                <div class="feature-item">
-                    <div class="feature-icon">🤖</div>
-                    <div>
-                        <strong>AI Flood Prediction</strong>
-                        <br><small>ML-powered risk assessment</small>
-                    </div>
-                </div>
-
-                <div class="feature-item">
-                    <div class="feature-icon">📱</div>
-                    <div>
-                        <strong>WhatsApp Alerts</strong>
-                        <br><small>Instant flood warnings</small>
-                    </div>
-                </div>
-            </div>
+<div class="login-stage">
+    <div class="login-box">
+        <div class="brand-mark">
+            <i class="bi bi-droplet-fill"></i>
         </div>
 
-        <!-- Form Side -->
-        <div class="login-form-container">
-            <!-- Mobile branding -->
-            <div class="text-center d-md-none mb-4">
-                <i class="bi bi-droplet-fill text-primary" style="font-size: 2.5rem;"></i>
-                <h4 class="text-primary fw-bold mt-2">JalScan</h4>
+        <h1 class="login-title">Sign in to JalScan</h1>
+        <p class="login-subtitle">Securing India's water future with AI telemetry.</p>
+
+        <form method="POST">
+            <div>
+                <label class="form-label" for="username">Access Identity</label>
+                <input type="text" id="username" name="username" class="form-input" placeholder="Enter your username"
+                    required>
             </div>
 
-            <h3>Welcome back! 👋</h3>
-            <p class="subtitle">Sign in to access your dashboard</p>
-
-            <form method="POST">
-                <div class="input-group-modern">
-                    <i class="bi bi-person input-icon"></i>
-                    <input type="text" class="form-control form-control-modern" id="username" name="username"
-                        placeholder="Username" required>
-                </div>
-
-                <div class="input-group-modern">
-                    <i class="bi bi-lock input-icon"></i>
-                    <input type="password" class="form-control form-control-modern" id="password" name="password"
-                        placeholder="Password" required>
-                </div>
-
-                <button type="submit" class="btn btn-login w-100">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
-                </button>
-            </form>
-
-            <div class="public-link">
-                <span>Want to report water levels?</span><br>
-                <a href="{{ url_for('public_upload') }}">Submit as Public User →</a>
+            <div>
+                <label class="form-label" for="password">Security Key</label>
+                <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" required>
             </div>
 
-            <div class="text-center mt-3">
-                <small class="text-muted">
-                    <i class="bi bi-shield-check text-success me-1"></i>
-                    Secure • Verified • CWC Operations
-                </small>
+            <button type="submit" class="btn-submit">
+                Access Infrastructure <i class="bi bi-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="alt-action">
+            Reporting a local event? <a href="{{ url_for('public_upload') }}">Public Submission Feed</a>
+        </div>
+
+        <div class="auth-footer">
+            <div class="auth-footer-item">
+                <i class="bi bi-shield-lock"></i> AES-256 Verified
+            </div>
+            <div class="auth-footer-item">
+                <i class="bi bi-cpu"></i> AI-Edge Ready
             </div>
         </div>
     </div>
