@@ -9,7 +9,7 @@
 
 JalScan is a next-generation water monitoring solution designed for the **Smart India Hackathon 2024**. It leverages cutting-edge AI, machine learning, and offline-first mobile technology to provide real-time flood risk assessment, secure data collection, and predictive analytics for field agents and decision-makers.
 
----
+------
 
 ## Key Innovations
 
