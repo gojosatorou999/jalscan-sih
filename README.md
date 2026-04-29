@@ -1,5 +1,5 @@
 # 🌊 JalScan: AI-Powered River Monitoring & Flood Prediction System
-
+</div "center">
 [![Framework: Flask](https://img.shields.io/badge/Framework-Flask-blue.svg)](https://flask.palletsprojects.com/)
 [![AI: Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-orange.svg)](https://ai.google.dev/)
 [![PWA: Offline-First](https://img.shields.io/badge/PWA-Offline--First-green.svg)](https://web.dev/progressive-web-apps/)
@@ -8,7 +8,7 @@
 > **"JalScan doesn't just show you the water level; it shows you the river's health, its behavior, and its future."**
 
 JalScan is a next-generation water monitoring solution designed for the **Smart India Hackathon 2024**. It leverages cutting-edge AI, machine learning, and offline-first mobile technology to provide real-time flood risk assessment, secure data collection, and predictive analytics for field agents and decision-makers.
-
+</div>
 ---------
 
 ## Key Innovations
