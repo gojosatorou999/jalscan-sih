@@ -8,7 +8,7 @@
 
 > **"JalScan doesn't just show you the water level; it shows you the river's health, its behavior, and its future."**
 
-JalScan is a next-generation water monitoring solution designed for the **Smart India Hackathon 2024**. It leverages cutting-edge AI, machine learning, and offline-first mobile technology to provide real-time flood risk assessment, secure data collection, and predictive analytics for field agents and decision-makers.
+JalScan is a next-generation water monitoring solution designed for the **Smart India Hackathon 2025**. It leverages cutting-edge AI, machine learning, and offline-first mobile technology to provide real-time flood risk assessment, secure data collection, and predictive analytics for field agents and decision-makers.
 </div>
 ---------
 
@@ -135,7 +135,7 @@ JalScan currently monitors critical stations across major Indian rivers:
 ---
 
 ## 👨‍💻 Project History
-Developed as a premium solution for **Smart India Hackathon 2024**, JalScan represents a leap forward in community-driven, AI-integrated flood management systems.
+Developed as a premium solution for **Smart India Hackathon 2025**, JalScan represents a leap forward in community-driven, AI-integrated flood management systems.
 
 ---
 *Version 4.0 | Fully Updated February 2026*
