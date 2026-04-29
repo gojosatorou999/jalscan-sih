@@ -1,5 +1,6 @@
 # 🌊 JalScan: AI-Powered River Monitoring & Flood Prediction System
 <div align="center">
+    
 [![Framework: Flask](https://img.shields.io/badge/Framework-Flask-blue.svg)](https://flask.palletsprojects.com/)
 [![AI: Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini-orange.svg)](https://ai.google.dev/)
 [![PWA: Offline-First](https://img.shields.io/badge/PWA-Offline--First-green.svg)](https://web.dev/progressive-web-apps/)
