@@ -1,4 +1,4 @@
-# JalScan - Flood Monitoring & Alert System 🌊
+# JalScan: Flood Monitoring & Alert System 🌊
 
 JalScan is a comprehensive flood monitoring application designed to track water levels in rivers and send timely alerts to nearby residents. It combines manual field reporting, automated tamper detection, and instant WhatsApp notifications to ensure public safety.
 
