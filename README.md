@@ -14,7 +14,7 @@ JalScan is a next generation water monitoring solution designed for the **Smart 
 
 ## Key Innovations
 
-### 🧠 River Memory AI Digital Twin
+### 🧠 River Memory AI Digital Twin 
 JalScan implements a unique **River Memory AI** system that creates a digital twin for every monitoring site. It doesn't just record numbers; it analyzes:
 *   **Water Color**: Turbidity and pollution detection using HSV classification.
 *   **Flow Estimation**: Optical flow velocity analysis for rapid rise detection.
